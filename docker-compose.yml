@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+    panx:
+      build: .
+      image: panx:latest
+      environment:
+        - PORT=${PORT}
+      ports:
+        - '${PORT}:${PORT}'
+      volumes:
+        - './public:/usr/src/app/public'
+        - './routes:/usr/src/app/routes'
+        - './views:/usr/src/app/views'
+  
