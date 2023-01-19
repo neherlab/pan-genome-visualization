@@ -1,0 +1,13 @@
+/\.build
+/\.cache
+/\.editorconfig
+/\.env
+/\.git
+/\.gitignore
+/\.idea
+/\.ignore
+/\.prettierignore
+/\.vscode*
+/node_modules
+/src/components/Msa/msa
+/src/components/Tree/phyloTree

@@ -1,6 +1,4 @@
 .git
 .idea
-.ignore
-.volumes
+.ignore*
 .vscode*
-.config

@@ -1,3 +1,6 @@
+*.log
+\.build
+\.cache
 \.env
 \.git/
 \.idea/
@@ -5,8 +8,3 @@
 \.volumes/
 \.vscode*
 node_modules/*
-public/bower_components/
-public/dataset/*
-public/dist/*
-public/*.html
-public/javascripts/meta-dict-*

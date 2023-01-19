@@ -1,0 +1,2 @@
+export const PHYLO_GRAPH_NODE_RADIUS = 8
+export const PHYLO_GRAPH_NODE_LABEL_FONT_SIZE = 12

@@ -6,7 +6,7 @@
 // Create an AWS Lambda function and attach it to "Origin Request" event of a
 // Cloudfront distribution
 
-const ARCHIVE_EXTS = ['.7z', '.br', '.bz2', '.gz', '.lzma', '.xz', '.zip', '.zst']
+const ARCHIVE_EXTS = ['.7z', '.br', '.bz2', '.gz', '.lz', '.lz4', '.lzma', '.lzo', '.sz', '.xz', '.zip', '.zst']
 
 function getHeader(headers, headerName) {
   const header = headers[headerName.toLowerCase()]

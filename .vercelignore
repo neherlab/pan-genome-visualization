@@ -1,0 +1,7 @@
+.build
+.cache
+.github
+.ignore
+.reports
+docs
+node_modules

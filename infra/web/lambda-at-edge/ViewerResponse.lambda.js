@@ -42,8 +42,7 @@ function generatePermissionsPolicyHeader(permissionsPolicyObject) {
     .join(', ')
 }
 const NEW_HEADERS = {
-  'Content-Security-Policy':
-    `default-src 'self' *.pangenome.org; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.pangenome.org plausible.io maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' maxcdn.bootstrapcdn.com fonts.googleapis.com; font-src 'self' maxcdn.bootstrapcdn.com fonts.googleapis.com fonts.gstatic.com;img-src 'self' data:; connect-src *; frame-src 'self' player.vimeo.com`,
+  'Content-Security-Policy': `default-src 'self' *.pangenome.org; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: *.pangenome.org plausible.io maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' maxcdn.bootstrapcdn.com fonts.googleapis.com; font-src 'self' maxcdn.bootstrapcdn.com fonts.googleapis.com fonts.gstatic.com;img-src 'self' data:; connect-src *; frame-src 'self' player.vimeo.com`,
   'Referrer-Policy': 'no-referrer',
   'Strict-Transport-Security': 'max-age=15768000; includeSubDomains; preload',
   'X-Content-Type-Options': 'nosniff',

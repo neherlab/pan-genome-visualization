@@ -1,12 +1,12 @@
-/* eslint-disable prefer-destructuring,sonarjs/no-collapsible-if,unicorn/no-lonely-if */
-// Implements rewrite of non-compressed to .gz URLs using AWS
+/* eslint-disable prefer-destructuring */
+// Implements rewrite of non-compressed to .gz or .br URLs using AWS
 // Lambda@Edge. This is useful if you have precompressed your files.
 //
 // Usage:
 // Create an AWS Lambda function and attach it to "Origin Request" event of a
 // Cloudfront distribution
 
-const ARCHIVE_EXTS = ['.7z', '.br', '.bz2', '.gz', '.lzma', '.xz', '.zip', '.zst']
+const ARCHIVE_EXTS = ['.7z', '.br', '.bz2', '.gz', '.lz', '.lz4', '.lzma', '.lzo', '.sz', '.xz', '.zip', '.zst']
 
 function getHeader(headers, headerName) {
   const header = headers[headerName.toLowerCase()]
@@ -31,7 +31,9 @@ function handler(event, context, callback) {
   // If not an archive file (which are not precompressed), rewrite the URL to
   // get the corresponding .gz file
   if (ARCHIVE_EXTS.every((ext) => !request.uri.endsWith(ext))) {
-    if (acceptsEncoding(headers, 'gzip')) {
+    if (acceptsEncoding(headers, 'br')) {
+      request.uri += '.br'
+    } else if (acceptsEncoding(headers, 'gzip')) {
       request.uri += '.gz'
     }
   }

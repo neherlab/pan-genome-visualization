@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+function abspath() {
+  readlink -m "$1"
+}
+
+export THIS_DIR=$(
+  cd "$(dirname "${BASH_SOURCE[0]}")"
+  pwd
+)
+
+SUCCESS="({ set +x; } 2> /dev/null && echo '🟩 Success' && exit 0)"
+FAILURE="({ set +x; } 2> /dev/null && echo '🟥 Failure' && exit 1)"
+CANCELLED="({ set +x; } 2> /dev/null && echo '🟦 Cancelled' && exit 0)"
+SUCCESS_OR_FAILURE="&& ${SUCCESS} || ${FAILURE}"
+HANDLE_SIGINT="trap \"${CANCELLED}; exit 0\" INT"
+
+export PACKAGE_NAME="pangenome"
+export PROJECT_ROOT_DIR="$(abspath "${THIS_DIR}")"
+
+export DOCKER_REPO="neherlab/pangenome_builder"
+export DOCKER_IMAGE_NAME_SAFE="${DOCKER_REPO//\//-}"
+export DOCKER_CONTAINER_NAME="${DOCKER_IMAGE_NAME_SAFE}-$(date +%s)"
+
+export NICE="nice -14 ionice -c2 -n3"
+export TIME="/usr/bin/time --quiet -f \"Cmd : %C\nTime: %E\nMem : %M KB\n\""
+
+export USER=user
+export GROUP=user
+
+. "${PROJECT_ROOT_DIR}/.env.example"
+if [ -f "${PROJECT_ROOT_DIR}/.env" ]; then
+  . "${PROJECT_ROOT_DIR}/.env"
+fi
+
+. "${THIS_DIR}/scripts/is_ci.sh"
+
+FORCE_DOCKER_IMAGE_BUILD=${FORCE_DOCKER_IMAGE_BUILD:-}
+DOCKER_IMAGE_PUSH=0
+WEB=0
+RELEASE=
+WATCH=0
+LINT=0
+FORMAT=0
+FIX=
+
+case "${1:-}" in
+"docker-image-build" | "d")
+  shift
+  FORCE_DOCKER_IMAGE_BUILD=1
+  ;;
+"docker-image-build-push" | "dp")
+  shift
+  FORCE_DOCKER_IMAGE_BUILD=1
+  DOCKER_IMAGE_PUSH=1
+  ;;
+"web" | "a")
+  shift
+  WEB=1
+  RELEASE="dev"
+  WATCH=0
+  ;;
+"web-release" | "ar")
+  shift
+  WEB=1
+  RELEASE="prod:build"
+  WATCH=0
+  ;;
+"watch-web-release" | "war")
+  shift
+  WEB=1
+  RELEASE="prod:watch"
+  WATCH=0
+  ;;
+esac
+
+DOCKER_IMAGE_VERSION="$(./scripts/docker_build_checksum.sh)"
+
+if ! docker inspect --format '{{.Id}}' "${DOCKER_REPO}-${DOCKER_IMAGE_VERSION}" &>/dev/null ||
+  [ -n "${FORCE_DOCKER_IMAGE_BUILD}" ]; then
+
+  export DOCKER_BUILDKIT=1
+  export BUILDKIT_PROGRESS=plain
+  export PROGRESS_NO_TRUNC=1
+
+  ${NICE} docker build -q \
+    --file="docker/docker-dev.dockerfile" \
+    --tag="${DOCKER_REPO}" \
+    --tag="${DOCKER_REPO}-${DOCKER_IMAGE_VERSION}" \
+    --cache-from="${DOCKER_REPO}" \
+    --cache-from="${DOCKER_REPO}-${DOCKER_IMAGE_VERSION}" \
+    --network=host \
+    --build-arg="UID=$(id -u)" \
+    --build-arg="GID=$(id -g)" \
+    --build-arg="USER=${USER}" \
+    --build-arg="GROUP=${GROUP}" \
+    . \
+    >/dev/null
+
+  if [ "${DOCKER_IMAGE_PUSH}" == "1" ]; then
+    docker push "${DOCKER_REPO}"
+    docker push "${DOCKER_REPO}-${DOCKER_IMAGE_VERSION}"
+  fi
+
+  if [ -n "${FORCE_DOCKER_IMAGE_BUILD}" ]; then
+    exit 0;
+  fi
+fi
+
+PARAMS=""
+COMMAND=${*:-}
+PORTS=
+if [ "${WEB}" == "1" ]; then
+  PORTS="-p 3000:3000"
+  COMMAND=${COMMAND:=yarn ${RELEASE}}
+else
+  COMMAND="${NICE} ${TIME} ${COMMAND}"
+fi
+
+# shellcheck disable=SC2086
+${NICE} docker run -it --rm \
+  --network=host \
+  --init \
+  --name="${DOCKER_CONTAINER_NAME}" \
+  --hostname="${DOCKER_IMAGE_NAME_SAFE}" \
+  --user="$(id -u):$(id -g)" \
+  --volume="${PROJECT_ROOT_DIR}:/workdir" \
+  --workdir="/workdir" \
+  --env="UID=$(id -u)" \
+  --env="GID=$(id -g)" \
+  --env="USER=${USER}" \
+  --env="GROUP=${GROUP}" \
+  --env="PS1=\${USER}@\${HOST}" \
+  --env-file="${PROJECT_ROOT_DIR}/.env" \
+  ${PORTS} \
+  "${DOCKER_REPO}-${DOCKER_IMAGE_VERSION}" \
+  bash -c "set -euo pipefail; ${HANDLE_SIGINT}; ${COMMAND} ${SUCCESS_OR_FAILURE}"

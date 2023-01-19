@@ -1,0 +1,34 @@
+@use 'sass:map';
+
+@import '~typeface-open-sans/index.css';
+@import './font-family-system';
+
+@import './variables';
+@import './bootstrap';
+@import './theme';
+
+@import './auspice';
+
+html,
+body {
+  height: 100%;
+}
+
+#__next {
+  height: 100%;
+}
+
+// Always show spinbox arrows in Chrome
+[type='number']::-webkit-inner-spin-button,
+[type='number']::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.btn.disabled,
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.popover {
+  pointer-events: none;
+}
