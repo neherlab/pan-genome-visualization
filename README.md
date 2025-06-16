@@ -155,7 +155,7 @@ In this example we have a directory called `pangenome-data/`, which will be the 
 In order to prepare the data for consumption by the web app, run:
 
 ```bash
-yarn prepare-data ../pangenome-data/dataset
+npm run prepare-data ../pangenome-data/dataset
 ```
 
 Replace the path `../pangenome-data/dataset` as apropriate for your local filesystem setup.
@@ -247,7 +247,7 @@ If you want to change the dropdown items, then, due to legacy reasons, it's tric
 Note, the changes to the `.env` file, as well as changes in data directory are only picked up after rebuild. So if you add, remove of change your datasets, or their names, or the URL of your data server, you need to rerun all the steps again:
 
 ```bash
-yarn prepare-data pangenome-data/dataset
+npm run prepare-data pangenome-data/dataset
 npm run build
 npm run start
 ```
