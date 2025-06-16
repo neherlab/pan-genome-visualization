@@ -9,7 +9,7 @@
     "build:webpack": "NODE_ENV=production webpack --env production",
     "build:gulp": "NODE_ENV=production gulp",
     "build:html": "rm -rf public/*.html && node ./scripts/renderPageHtml.js && node ./scripts/renderPathogenHtml.js",
-    "start": "yarn serve public/",
+    "start": "npm run serve -- public/",
     "prepare-data": "python3 scripts/build_data_index.py",
     "serve": "NODE_ENV=production node ./scripts/server.js"
   },
