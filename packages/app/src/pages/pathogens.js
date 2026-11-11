@@ -11,7 +11,7 @@ export const page = {
   html,
   /** List a link to every dataset of the shown release, in the byte order of their ids. */
   mount({ index }) {
-    const ids = index.datasets.map((dataset) => dataset.id).toSorted((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const ids = index.datasets.map((dataset) => dataset.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     const list = document.getElementById("pathogens");
     for (const id of ids) {
       const link = document.createElement("a");
