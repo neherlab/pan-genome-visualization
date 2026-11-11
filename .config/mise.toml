@@ -1,0 +1,18 @@
+# Tools of the repository, on the host after `mise install` and in the
+# development image (dev/docker/dev.dockerfile). `just tools-lock` writes the
+# URLs and checksums of .config/mise.lock after a version change here.
+min_version = "2026.10.17"
+
+[settings]
+lockfile = true
+locked = true
+minimum_release_age = "7d"
+
+[tools]
+actionlint = "1.7.12"
+bun = "1.4.4"
+hadolint = "2.15.1"
+jq = "1.8.2"
+just = "1.59.0"
+shellcheck = "0.11.0"
+shfmt = "3.14.1"
