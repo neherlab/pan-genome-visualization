@@ -15,7 +15,8 @@ import {filterClusterDataTable} from "./datatable-gc";
 
 import $ from 'jquery';
 
-const speciesTree = function(tree_svg,treeJsonPath, handleResult){
+/** Draw the strain tree: `data` is the tree of dataset.json with the attributes of each tip */
+const speciesTree = function(tree_svg, data, handleResult){
     var treeplot = d3.select("#"+tree_svg);
     treeplot.attr("width", panXDashboard.winInnerWidth/3.);
     treeplot.attr("height", panXDashboard.winInnerWidth/3.);
@@ -35,23 +36,16 @@ const speciesTree = function(tree_svg,treeJsonPath, handleResult){
         //filterClusterDataTable(clusterTableId, myTree);
     };
 
-    //console.log("loading speciesTree", treeJsonPath);
-    d3.json(treeJsonPath, function(err, data){
-        if (data){
-            myTree = phyloTree(data, {svg:treeplot, margins:{top:10, bottom:10, left:10, right:10},
-                                      scaleBar:true, autoTipSize:false, tipStrokeWidth:0.5,
-                                      callbacks:speciesTreeCallbacks, orientation:{x:1, y:1}}
-                               );
-        }else{
-            console.log("error loading speciesTree data",err);
-        }
-        drawTree(myTree);
+    myTree = phyloTree(data, {svg:treeplot, margins:{top:10, bottom:10, left:10, right:10},
+                              scaleBar:true, autoTipSize:false, tipStrokeWidth:0.5,
+                              callbacks:speciesTreeCallbacks, orientation:{x:1, y:1}}
+                       );
+    drawTree(myTree);
 
-        tipLabels(myTree, tipText, tipFontSize(myTree), 3, 8);
-        myTree.showTipLabels=true;
-        // add a look up for tips
-        handleResult(myTree);
-    });
+    tipLabels(myTree, tipText, tipFontSize(myTree), 3, 8);
+    myTree.showTipLabels=true;
+    // add a look up for tips
+    handleResult(myTree);
 }
 
 export default speciesTree;

@@ -1,32 +1,35 @@
 import {create_dataTable} from "./datatable-gc";
 import {panXMetaTable} from './global';
 import {button_tooltip,append_download_button} from './tooltips';
-
-export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
+import {accessionUrl, dataset, datasetFileUrl, metaDisplay} from './context';
+import {UNKNOWN} from '../data';
 
 //#DataTable for meta-info
 export const metaDataTable = {
     dataTable2Fun: function (meta_table_id, handleMetaDataTable) {
         var metaDatatable, metaConfiguration;
         //# create meta table
-        var meta_display_order = meta_display['meta_display_order'].slice();
+        var meta_display_order = metaDisplay['meta_display_order'].slice();
         meta_display_order.unshift('strain');
-        if (typeof not_accession=="undefined"){
-            meta_display_order.unshift('accession');
-        }
+        meta_display_order.unshift('accession');
 
         create_dataTable('#'+meta_table_id, meta_display_order);
 
         //# assign data to each column
         var columnDefs_list=[];
         for (var i = 0, len = meta_display_order.length; i < len; i++) {
-            var column_config={'targets': i,'data': meta_display_order[i]};
-            //** add hyperlink for NCBI accession number
-            if (meta_display_order[i]=='accession'){
-                if (panXMetaTable.show_NCBI_link) {
-                    column_config['render']= function(data, type, row, meta){
-                                         return '<a href="https://www.ncbi.nlm.nih.gov/nuccore/'+data+'" target="_blank">'+data+'</a>';}
-                }
+            //** a function reads each key, because metadata keys may hold `.`, which DataTables reads as a path
+            const key = meta_display_order[i];
+            var column_config={'targets': i,'data': function(row){return row[key];}};
+            //** link each accession to its page by the accession_url of the dataset
+            if (key=='accession' && dataset.accession_url!==null){
+                column_config['createdCell']= function(cell, data){
+                    const link = document.createElement('a');
+                    link.href = accessionUrl(data);
+                    link.target = '_blank';
+                    link.textContent = data;
+                    cell.replaceChildren(link);
+                };
             }
             columnDefs_list.push(column_config);
         }
@@ -35,7 +38,7 @@ export const metaDataTable = {
         columnDefs_list.push(click_sortDescend);*/
 
         metaDatatable= $('#'+meta_table_id).DataTable({
-                'ajax': path_datatable_meta,
+                'data': metaTableRows(),
                 'responsive': true,
                 'search':true,
                 'paging':true,
@@ -58,7 +61,7 @@ export const metaDataTable = {
         $('<span style="display:inline-block; width: 10px;"></span>').appendTo('div#'+meta_table_id+'_length.dataTables_length');
         $('<button type="button" id="'+panXMetaTable.meta_table_unselect+'" class="btn btn-default">Unselect all clicked items</button>').appendTo('div#'+meta_table_id+'_length.dataTables_length');
         //append_download_button
-        append_download_button('#'+meta_table_id+'_filter.dataTables_filter', 'metainfo', `${DATA_ROOT_URL}/dataset/${speciesAbbr}/metainfo.tsv`);
+        append_download_button('#'+meta_table_id+'_filter.dataTables_filter', 'metainfo', datasetFileUrl('metadata.tsv'));
         const dt_button_tooltip_dict= {
         'metainfo': 'download strain metadata'
         }
@@ -66,6 +69,20 @@ export const metaDataTable = {
 
         handleMetaDataTable(metaDatatable);
     }
+};
+
+/**
+ * Return the rows of the metadata table: one per strain of dataset.json, with its accession, its strain (empty when
+ * unknown), and each metadata value (`unknown` when missing)
+ */
+const metaTableRows = function(){
+    return dataset.strains.map(function(strain){
+        const row = {accession: strain.accession, strain: strain.strain ?? ''};
+        for (const column of dataset.metadata){
+            row[column.key] = strain.values[column.key] ?? UNKNOWN;
+        }
+        return row;
+    });
 };
 
 export const filterMetaDataTable = function(dataTableID, tree)

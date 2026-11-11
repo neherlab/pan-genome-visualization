@@ -4,6 +4,7 @@ import {panXTree,metaLegend,metaTitles} from "./global";
 import {colorPresenceAbsence,styleGainLoss} from "./tree-init";
 import {assign_metadata_color,metaColor_dicts,metaColor_dicts_keys,metaColor_reference_dicts} from './meta-color-assignment';
 import {preOrderIteration} from "../vendor/phyloTree/treeHelpers";
+import {metaDisplay} from "./context";
 
 //## legend configuration
 var legendRectSize = 15,
@@ -31,7 +32,7 @@ const makeLegend = function(metaType,speciesTree,geneTree,coreTree_legend_id){ /
         styleGainLoss(speciesTree);
     }
     else if (metaType!='') {
-        const meta_coloring_type= meta_display['color_options'][metaType]['type'];
+        const meta_coloring_type= metaDisplay['color_options'][metaType]['type'];
         //show colormap selector for discrete color scales
         const visibility=(meta_coloring_type=='discrete')?'visible':'hidden';
         d3.select('#colorblind_div').style('visibility',visibility);
