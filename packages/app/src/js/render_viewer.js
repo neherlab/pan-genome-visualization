@@ -96,7 +96,8 @@ const handleMetaDataTable = function(metaDatatable){
 }
 
 const tryConnectTrees = function(){
-    if (mySpeciesTree&&myGeneTree&&myDatatable&&myMetaDatatable){
+    //** the gene tree is not needed: it follows the first cluster click, which can fail or show a cluster without tree
+    if (mySpeciesTree&&myDatatable&&myMetaDatatable){
         //connectTrees(mySpeciesTree, myGeneTree);
         linkTableAlignmentTrees(cluster_table_id, meta_table_id, myDatatable, mySpeciesTree, handleGeneTree);
         linkMetaTableTree(meta_table_id, myMetaDatatable,mySpeciesTree);
@@ -141,17 +142,19 @@ const search_accession= function (input_value) {
 
     if (input_value=='') {
         undoHideNonSelected(mySpeciesTree);
-        undoHideNonSelected(myGeneTree);
+        if (myGeneTree) {undoHideNonSelected(myGeneTree);}
     }else{
         mySpeciesTree.tips.forEach(function(d){
             d.state.selected=(nodeMatch(d,'speciesTree'))?true:false;
         })
         hideNonSelected(mySpeciesTree);
 
-        myGeneTree.tips.forEach(function(d){
-            d.state.selected=(nodeMatch(d,'geneTree'))?true:false;
-        })
-        hideNonSelected(myGeneTree);
+        if (myGeneTree) {
+            myGeneTree.tips.forEach(function(d){
+                d.state.selected=(nodeMatch(d,'geneTree'))?true:false;
+            })
+            hideNonSelected(myGeneTree);
+        }
     }
 };
 window.search_accession=search_accession;
@@ -168,6 +171,9 @@ const search_annotation= function (input_value) {
         return ((annotation.indexOf(searchStr) > -1 ) && (input_value.length != 0));
     };
 
+    if (!myGeneTree) {
+        return;
+    }
     if (input_value=='') {
         undoHideNonSelected(myGeneTree);
     }else{
@@ -229,5 +235,5 @@ window.addEventListener("resize", function(){
         myGeneTree.svg.attr("width", window.innerWidth/3);
         updateGeometry(myGeneTree);
     };
-    applyChangeToTree(myGeneTree, geneTreeResize, 0);
+    if (myGeneTree) {applyChangeToTree(myGeneTree, geneTreeResize, 0);}
 });

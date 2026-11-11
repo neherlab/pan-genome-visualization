@@ -75,8 +75,8 @@ const makeLegend = function(metaType,speciesTree,geneTree,coreTree_legend_id){ /
             node.tipAttributes.r = node.genePresent?panXTree.genePresentR:panXTree.geneAbsentR;
         }
 
-        //update the gene tree
-        for (var i=0; i<geneTree.tips.length; i++){
+        //update the gene tree, once a cluster with a gene tree has loaded
+        for (var i=0; geneTree && i<geneTree.tips.length; i++){
             node = geneTree.tips[i];
             strain = speciesTree.namesToTips[node.n.accession];
             if(meta_coloring_type=='discrete'){
@@ -117,7 +117,7 @@ const makeLegend = function(metaType,speciesTree,geneTree,coreTree_legend_id){ /
             console.log('panXTree.singleton_gene',panXTree.singleton_gene)
             updateTips(speciesTree, ["fill", "stroke"], 0);
         }else{
-            updateTips(geneTree, [], ["fill", "stroke"], 0);
+            if (geneTree) {updateTips(geneTree, [], ["fill", "stroke"], 0);}
             updateTips(speciesTree, ['r'], ["fill", "stroke"], 0);
         }
         updateBranches(speciesTree, [], ["stroke"], 0);
