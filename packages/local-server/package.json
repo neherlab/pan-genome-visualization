@@ -1,0 +1,14 @@
+{
+  "name": "@panx/local-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local hosts of the panX app and data, with the routing and headers of the deployed hosts",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    "./app-site": "./src/app-site.ts"
+  },
+  "dependencies": {
+    "@panx/data-format": "workspace:*"
+  }
+}

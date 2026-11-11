@@ -44,6 +44,13 @@
         "zod": "4.6.7",
       },
     },
+    "packages/local-server": {
+      "name": "@panx/local-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@panx/data-format": "workspace:*",
+      },
+    },
   },
   "patchedDependencies": {
     "svg-pan-zoom@3.5.0": "patches/svg-pan-zoom@3.5.0.patch",
@@ -217,6 +224,8 @@
     "@panx/app": ["@panx/app@workspace:packages/app"],
 
     "@panx/data-format": ["@panx/data-format@workspace:packages/data-format"],
+
+    "@panx/local-server": ["@panx/local-server@workspace:packages/local-server"],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.67.5", "", { "os": "android", "cpu": "arm" }, "sha512-FdWPeulkH+FH+rBzyKBD59tuVN4tRKvmVilSJm0OcnoYsQTpd9UhD78OaPcsYqo2fX6hCwAG0YIjrDLoQ3pR3g=="],
 
