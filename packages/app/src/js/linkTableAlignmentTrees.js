@@ -4,6 +4,9 @@ import geneTree from "./geneTree";
 import {panXTree,metaLegend,panXMetaTable} from "./global";
 import {attachButtons, hideNonSelected, undoHideNonSelected} from "./tree-init";
 import {removeLabels}  from "../vendor/phyloTree/labels";
+import {bundles} from "./context";
+import {nameText} from "./datatable-gc";
+import {bundleErrorText} from "../data";
 
 /**
  * Module for initializing trigger actions in cluster datatable. It includes:
@@ -40,40 +43,60 @@ const unselect_metaTable_tree = function(MetaTableID, speciesTree){
     }
 }
 
-export const loadNewGeneCluster = function(data, speciesTree, handleGeneTree, seqType){
-    const clusterID=data.msa,
-          ann_majority=data.ann;
+/**
+ * Show a cluster: read its bundle (one range request), then show its alignment of `seqType` (`aa` or `na`), its gene
+ * tree, and its gain/loss pattern. A newer click aborts the read; a failed read shows its error in the alignment panel.
+ */
+export const loadNewGeneCluster = async function(data, speciesTree, handleGeneTree, seqType){
+    const clusterID=data.id,
+          ann_majority=nameText(data.annotation);
     panXTree.currentClusterID=clusterID;
-    console.log("loadNewGeneCluster", clusterID, seqType);
-    if (clusterID.indexOf('RC00')!== -1) {seqType='na'}
-    msaLoad(aln_file_path+clusterID+'_'+seqType+'_aln_reduced.fa',(seqType=='aa')?'taylor':'nucleotide');
-    /*try{    }
-    catch(err) {
-        console.log('msa loading failed')//console.log(err.message);}*/
-
-    var geneTree_name=aln_file_path + clusterID+'_tree.json';
-    // if it is a gene tree, show the title with geneCluster Id
-    if (geneTree_name.indexOf('tree.json') !== -1) {
-        showViewerTitle("genetree_title",geneTree_name,ann_majority);
-    };
+    if (data.kind==='rna') {seqType='na'}
+    showViewerTitle("genetree_title",clusterID,ann_majority);
+    let bundle;
     try {
-        var myGeneTree=geneTree("geneTree", geneTree_name, handleGeneTree, speciesTree, panXTree.currentTreeLayout);
-        attachButtons(myGeneTree, { download_geneTree:"download_geneTree",
-                                clusterID:clusterID });
+        bundle = await bundles.read(data);
+    } catch (error) {
+        console.error(error);
+        if (panXTree.currentClusterID===clusterID){
+            showBundleError(bundleErrorText(error));
+        }
+        return;
     }
-    catch(err) {
-        console.log('No tree avaible: either tree missing or this is singleton gene');
+    if (bundle===undefined || panXTree.currentClusterID!==clusterID){
+        return;
     }
+    panXTree.currentPatterns=bundle.patterns.patterns;
+    if (seqType==='aa'){
+        msaLoad(clusterID, 'aa', bundle.aaAln, bundle.aaAlnReduced, 'taylor');
+    }else{
+        msaLoad(clusterID, 'na', bundle.naAln, bundle.naAlnReduced, 'nucleotide');
+    }
+    //** the viewer adds its own fields to the tree nodes, so it gets a copy of the cached tree
+    var myGeneTree=geneTree("geneTree", bundle.tree===undefined ? undefined : structuredClone(bundle.tree), handleGeneTree, speciesTree, panXTree.currentTreeLayout);
+    attachButtons(myGeneTree, { download_geneTree:"download_geneTree",
+                            clusterID:clusterID, nwk:bundle.nwk });
 
     //change_select_dropdown_value("dropdown_select",'genePattern');
+}
+
+//** show the error of a failed bundle read in the alignment panel
+const showBundleError = function(text) {
+    d3.select('#msa_legend').selectAll('a, span').remove();
+    const panel = document.getElementById('snippetDiv');
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger';
+    alert.setAttribute('role', 'alert');
+    alert.textContent = text;
+    panel.replaceChildren(alert);
 }
 
 //** check if the item in child row matches the tips of gene tree
 const nodeMatch= function (d, input_item, input_type){
     if (input_type!=='duplication') {
-        // annotation and geneName are stored in d.n.annotation
+        // annotation and geneName are stored in d.n.annotation; a tip without it matches nothing
         var annotation=d.n.annotation;//.toLowerCase()
-        return ((annotation.indexOf(input_item) > -1 ) && (input_item.length != 0));
+        return ((annotation!==undefined) && (annotation.indexOf(input_item) > -1 ) && (input_item.length != 0));
     } else {
         var accession=d.n.accession;
         return ((accession.indexOf(input_item) > -1 ) && (input_item.length != 0));

@@ -3,6 +3,7 @@ import "./dataset.css";
 import "../vendor/pace.min.js";
 
 import { loadClusters, loadDataset } from "../data";
+import { setViewerContext } from "../js/context.js";
 import html from "./dataset.html?raw";
 import { NAV } from "./nav.js";
 
@@ -21,6 +22,7 @@ export const page = {
 
 /** Start the viewer on the files of the shown dataset: the index files, `dataset.json`, and `clusters.json`. */
 async function startViewer(files) {
+  setViewerContext(files);
   await import("../js/render_viewer.js");
 }
 

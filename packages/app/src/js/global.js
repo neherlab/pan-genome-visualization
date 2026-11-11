@@ -2,6 +2,8 @@
 export const panXTree = {
     /**if true, use separated pattern instead of entire pattern */
     currentClusterID: '',
+    /** gain/loss pattern string of the shown cluster */
+    currentPatterns: undefined,
     currentTreeLayout: '',
     currentGeneTree: undefined,
     speciesTree: undefined, //{}
@@ -68,13 +70,9 @@ export const panXClusterTable = {
     cluster_table_unselect: "cluster_table_unselect"
 };
 
-var default_NCBI_link;
-default_NCBI_link= (speciesAbbr=='P_marinus_meta')? false: true;
-
 export const panXMetaTable = {
     meta_table_id: 'dc_data_table_meta',
-    meta_table_unselect: "meta_table_unselect",
-    show_NCBI_link: default_NCBI_link
+    meta_table_unselect: "meta_table_unselect"
 };
 
 export const msaViewerAsset = {

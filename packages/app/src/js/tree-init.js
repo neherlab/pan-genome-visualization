@@ -10,10 +10,13 @@ import {change_select_dropdown_value} from './linkTableAlignmentTrees';
 import {updateMetadata, removeLegend} from './meta-color-legend';
 import {updateTipAttribute,updateBranches} from "../vendor/phyloTree/updateTree";
 import {unselect_clusterTable} from "./datatable-gc";
+import {datasetFileUrl, metaDisplay} from "./context";
+import {UNKNOWN} from "../data";
 
 const tipUnselected=panXTree.tipUnselected;
 
-export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
+/** Blob URL of the gene tree download button of the shown cluster */
+var geneTree_download_url;
 
 export const hideNonSelected =function(tree){
     tree.tipElements
@@ -48,7 +51,8 @@ export const branchText = function(d){
 export const branchFontSize = function(d){return d.stats.leafCount>2?3:0;}
 export const tipText = function(d){
     if (d.terminal){
-        return d.n.attr.strain ? d.n.attr.strain: d.n.name ;
+        //** a strain tree tip without strain name and a gene tree tip show their name
+        return (d.n.attr.strain && d.n.attr.strain!==UNKNOWN) ? d.n.attr.strain: d.n.name ;
     }else{
         return "";
     }
@@ -218,18 +222,26 @@ export const attachButtons = function(myTree, buttons){
     if (buttons.download_coreTree){
         d3.select('#'+buttons.download_coreTree)
             .append('a')
-            .attr('href', `${DATA_ROOT_URL}/dataset/${speciesAbbr}/strain_tree.nwk`)
+            .attr('href', datasetFileUrl('strain_tree.nwk'))
             .append('i')
             .attr('class','glyphicon glyphicon-download-alt')
     }
     if (buttons.download_geneTree&&buttons.clusterID){
+        //** the gene tree Newick of the cluster, when the cluster has one
         var download_geneTree=d3.select('#'+buttons.download_geneTree);
             download_geneTree.selectAll('a').remove();
-            download_geneTree.append('a')
-                .attr('id','#'+buttons.download_geneTree_id+'_href')
-                .attr('href', `${DATA_ROOT_URL}/dataset/${speciesAbbr}/geneCluster/${buttons.clusterID}.nwk`)
-                .append('i')
-                .attr('class','glyphicon glyphicon-download-alt')
+            if (geneTree_download_url!==undefined){
+                URL.revokeObjectURL(geneTree_download_url);
+                geneTree_download_url=undefined;
+            }
+            if (buttons.nwk!==undefined){
+                geneTree_download_url=URL.createObjectURL(new Blob([buttons.nwk], {type: 'text/plain'}));
+                download_geneTree.append('a')
+                    .attr('href', geneTree_download_url)
+                    .attr('download', `${buttons.clusterID}.nwk`)
+                    .append('i')
+                    .attr('class','glyphicon glyphicon-download-alt')
+            }
     }
     if (buttons.panzoom){
         $('#'+buttons.panzoom).change(function() {
@@ -310,7 +322,7 @@ export const connectTrees = function(speciesTree, geneTree){
         colorPresenceAbsence(speciesTree);
         change_select_dropdown_value("dropdown_select",'genePattern');
     }else{
-        updateMetadata(metaLegend.current_metaType, speciesTree, geneTree, meta_display, 'coreTree_legend', 0);
+        updateMetadata(metaLegend.current_metaType, speciesTree, geneTree, metaDisplay, 'coreTree_legend', 0);
     }
     styleGainLoss(speciesTree);
 
@@ -330,7 +342,8 @@ export const colorPresenceAbsence = function(speciesTree){
 }
 
 export const styleGainLoss = function(speciesTree){
-    const pattern_path=aln_file_path+panXTree.currentClusterID+'_patterns.json';
+    //** the gain/loss pattern of the shown cluster: one character per non-root node of the strain tree in pre-order
+    const event_string=panXTree.currentPatterns;
     var node,stroke,stroke_width_factor,stroke_dasharray,event_type;
 
     if (panXTree.singleton_gene) {
@@ -345,37 +358,35 @@ export const styleGainLoss = function(speciesTree){
         updateTips(speciesTree, ["r"], ["fill", "stroke"], 0);
     }
 
-    d3.json(pattern_path, function(error, data){
-        const event_string=data['patterns'];
-        const nodes=speciesTree.nodes;
-        for (var i =0,len=nodes.length; i<len; i++){
-            node=nodes[i];
-            if (node.n.name!='NODE_0000000'){
-                event_type=event_string[i-1];
-                stroke=(event_type=='0'||event_type=='2')? panXTree.geneAbsentFill: panXTree.genePresentFill;
-                if (panXTree.singleton_gene && event_type=='1'){
-                    node.tipAttributes.r = panXTree.genePresentR;
-                    fill = panXTree.genePresentFill;
-                    node.tipAttributes.fill = fill;
-                    node.tipAttributes.stroke = d3.rgb(fill).darker(panXTree.strokeToFill).toString();
-                    updateTips(speciesTree, ["r"], ["fill", "stroke"], 0);
-                }
-                stroke_width_factor=(event_type=='1'||event_type=='2')? 1.5: 1;
-                stroke_dasharray= (event_type=='2') ? "6,6" : "1,0";
-                node.branchAttributes["stroke"] = stroke;
-                //** store gene event color
-                //node.branchAttributes['event_pattern']=stroke;
-                node.branchAttributes["stroke-width"] = panXTree.branch_stroke_width*stroke_width_factor;
-                node.branchAttributes["stroke-dasharray"] = stroke_dasharray;
-            }
+    if (event_string===undefined){
+        return;
+    }
+    const nodes=speciesTree.nodes;
+    //** nodes[0] is the root, which has no branch and no pattern character
+    for (var i =1,len=nodes.length; i<len; i++){
+        node=nodes[i];
+        event_type=event_string[i-1];
+        stroke=(event_type=='0'||event_type=='2')? panXTree.geneAbsentFill: panXTree.genePresentFill;
+        if (panXTree.singleton_gene && event_type=='1'){
+            node.tipAttributes.r = panXTree.genePresentR;
+            fill = panXTree.genePresentFill;
+            node.tipAttributes.fill = fill;
+            node.tipAttributes.stroke = d3.rgb(fill).darker(panXTree.strokeToFill).toString();
+            updateTips(speciesTree, ["r"], ["fill", "stroke"], 0);
         }
-        if (metaLegend.current_metaType=='genePattern'||!metaLegend.current_metaType){
-            updateBranches(speciesTree, [], ['stroke', 'stroke-width','stroke-dasharray'], 0);
-        }else{
-            updateBranches(speciesTree, [], ['stroke-width','stroke-dasharray'], 0);
-        }
-        //console.log('gain/loss pattern loading finished')
-    })
+        stroke_width_factor=(event_type=='1'||event_type=='2')? 1.5: 1;
+        stroke_dasharray= (event_type=='2') ? "6,6" : "1,0";
+        node.branchAttributes["stroke"] = stroke;
+        //** store gene event color
+        //node.branchAttributes['event_pattern']=stroke;
+        node.branchAttributes["stroke-width"] = panXTree.branch_stroke_width*stroke_width_factor;
+        node.branchAttributes["stroke-dasharray"] = stroke_dasharray;
+    }
+    if (metaLegend.current_metaType=='genePattern'||!metaLegend.current_metaType){
+        updateBranches(speciesTree, [], ['stroke', 'stroke-width','stroke-dasharray'], 0);
+    }else{
+        updateBranches(speciesTree, [], ['stroke-width','stroke-dasharray'], 0);
+    }
 }
 
 const tipStroke=panXTree.tipStroke;

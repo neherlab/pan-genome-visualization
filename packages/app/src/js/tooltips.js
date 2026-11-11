@@ -2,7 +2,9 @@ import d3 from "d3";
 import d3Tip from "d3-tip";
 d3.tip = d3Tip;
 
-const meta_types =meta_display['meta_display_order'];
+import {metaDisplay} from "./context";
+
+const meta_types =metaDisplay['meta_display_order'];
 var antibiotics_set;
 
 //** tooltip for datatables header/tree buttons
@@ -154,8 +156,8 @@ export const button_tooltip = function(divID, tooltip_dict) {
 };
 
 
-//** create download buttons for table and msa viewer (core_genes,etc)
-export const append_download_button = function(divID, buttonId, href_link){
+//** create download buttons for table and msa viewer (core_genes,etc); `file_name` names the saved file of a Blob URL
+export const append_download_button = function(divID, buttonId, href_link, file_name){
     d3.select(divID)
         .append('span')
         .style('display','inline-block')
@@ -163,6 +165,7 @@ export const append_download_button = function(divID, buttonId, href_link){
     d3.select(divID)
         .append('a')
         .attr('href',href_link)
+        .attr('download', file_name ?? null)
         .append('i')
         .attr('id', buttonId)
         .attr('class','glyphicon glyphicon-download-alt btn_tooltip')

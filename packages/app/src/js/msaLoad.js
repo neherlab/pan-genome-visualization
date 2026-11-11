@@ -5,12 +5,27 @@ import {hideNonSelected} from './tree-init'
 import {button_tooltip,append_download_button} from './tooltips'
 
 
-const msaLoad = function (aln_path,scheme_type) {
+/** Blob URLs of the alignment download buttons of the shown cluster */
+var download_urls = [];
+
+/**
+ * Show the reduced alignment of a cluster, with download buttons for the full and the reduced alignment
+ * @param {str} clusterID    : cluster id
+ * @param {str} seqType      : `aa` or `na`
+ * @param {str} aln          : FASTA text of the full alignment
+ * @param {str} aln_reduced  : FASTA text of the reduced alignment
+ * @param {str} scheme_type  : colour scheme of msa
+ */
+const msaLoad = function (clusterID, seqType, aln, aln_reduced, scheme_type) {
     var rootDiv = document.getElementById('snippetDiv');
+    rootDiv.replaceChildren();
+    const seqs = msa.io.fasta.parse(aln_reduced);
+    //** the accession of each record: the part of its header before `|` (msa keeps it as the key of `ids`)
+    const seqID_to_accession = new Map(seqs.map(function(seq){return [seq.id, Object.keys(seq.ids)[0]];}));
     /* global rootDiv */
     var opts = {
       el: rootDiv,
-      importURL: aln_path,
+      seqs: seqs,
       bootstrapMenu: false
     };
 
@@ -27,16 +42,16 @@ const msaLoad = function (aln_path,scheme_type) {
     //opts.config={};opts.conf= {alphabetSize: 1};
 
     var m =  new msa.msa(opts);    //JSON.stringify
+    m.render();
     //# click row/rows to highlight the related strain/strains
-    var seqID_to_accession_dt={};
     m.g.on('row:click', function(data){
-        var alnID=data.evt.currentTarget.textContent;
-        var accession=alnID.split("-", 1)[0];
-        seqID_to_accession_dt[data.seqId]=accession
         msaViewerAsset.selected_rows_set= new Set();
         var selection = m.g.selcol.pluck("seqId");
         for (var i=0,len=selection.length; i<len; i++){
-            msaViewerAsset.selected_rows_set.add(seqID_to_accession_dt[selection[i]])
+            const accession = seqID_to_accession.get(selection[i]);
+            if (accession!==undefined){
+                msaViewerAsset.selected_rows_set.add(accession);
+            }
         }
         var speciesTree= panXTree.speciesTree;;
         if (speciesTree){
@@ -75,8 +90,12 @@ const msaLoad = function (aln_path,scheme_type) {
 
     const msa_legend=d3.select('#msa_legend');
     msa_legend.selectAll('a, span').remove();
-    append_download_button('#msa_legend','msa_aln',aln_path.replace('_reduced',''));
-    append_download_button('#msa_legend','msa_reduced_aln',aln_path);
+    for (const url of download_urls) {
+        URL.revokeObjectURL(url);
+    }
+    download_urls = [fastaUrl(aln), fastaUrl(aln_reduced)];
+    append_download_button('#msa_legend','msa_aln',download_urls[0], `${clusterID}_${seqType}_aln.fa`);
+    append_download_button('#msa_legend','msa_reduced_aln',download_urls[1], `${clusterID}_${seqType}_aln_reduced.fa`);
     const msa_button_tooltip_dict= {
         'msa_aln': 'download current alignment',
         'msa_reduced_aln': 'download current reduced alignment (consensus sequence and variable sites)'
@@ -85,5 +104,9 @@ const msaLoad = function (aln_path,scheme_type) {
 
 };
 
+//** Blob URL of a FASTA text
+const fastaUrl = function (text) {
+    return URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+};
 
 export default msaLoad;

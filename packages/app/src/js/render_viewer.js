@@ -12,6 +12,7 @@ import {assign_metadata_color} from "./meta-color-assignment";
 import {tooltip_toggle,tooltip_toggle_dict,tooltip_node,tooltip_branch} from './tooltips';
 import speciesTreeCallbacks from "./speciesTreeCallbacks";
 import geneTreeCallbacks from "./geneTreeCallbacks";
+import {metaDetails, metaDisplay, strainTree} from "./context";
 // /** strain_tree processing */
 //render_tree(0, "mytree1", coreTree_path, clusterID=null, null);
 
@@ -103,24 +104,24 @@ const tryConnectTrees = function(){
         //attachPanzoom("geneTree", myGeneTree);
         tooltip_toggle(tooltip_toggle_dict);
         /** create metadata dropdown list */
-        create_dropdown("#dropdown_list",mySpeciesTree,'geneTree',meta_display,'coreTree_legend',null);
-        assign_metadata_color(meta_details,meta_display);
+        create_dropdown("#dropdown_list",mySpeciesTree,'geneTree',metaDisplay,'coreTree_legend',null);
+        assign_metadata_color(metaDetails,metaDisplay);
         //** monitor metadata selection and make legend
         var menu_panel = d3.select("#dropdown_select")
         //** attach metaLegend button
         $('#colorblind_safe').change(function() {
             metaLegend.common_color= d3.select(this).property('checked')?false:true;
-            updateMetadata(metaLegend.current_metaType, mySpeciesTree, myGeneTree, meta_display, 'coreTree_legend', 0);
+            updateMetadata(metaLegend.current_metaType, mySpeciesTree, myGeneTree, metaDisplay, 'coreTree_legend', 0);
         });
         menu_panel.on("change", function(d) {
             const metaType=this.value;
             if (metaType!='Meta-info') {
-                if (meta_display['color_options'][metaType]!=undefined && meta_display['color_options'][metaType]['type']=='discrete'){
+                if (metaDisplay['color_options'][metaType]!=undefined && metaDisplay['color_options'][metaType]['type']=='discrete'){
                     tooltip_toggle({'colorblind_safe':'switch on/off colorblind-friendly mode'})
                 }
                 //console.log("trigger meta data color change", metaType, d, menu_panel);
                 metaLegend.current_metaType=metaType;
-                updateMetadata(metaType, mySpeciesTree, myGeneTree, meta_display, 'coreTree_legend', 0);
+                updateMetadata(metaType, mySpeciesTree, myGeneTree, metaDisplay, 'coreTree_legend', 0);
             }
         });
     }else{
@@ -155,11 +156,14 @@ const search_accession= function (input_value) {
 };
 window.search_accession=search_accession;
 
-//** search strain via annotation
+//** search strain via annotation; a tip without annotation matches nothing
 const search_annotation= function (input_value) {
     /*var tree_index=1;*/
     var searchStr = input_value.toLowerCase();
     function nodeMatch(d, treeType){
+        if (d.n.annotation===undefined){
+            return false;
+        }
         var annotation=d.n.annotation.toLowerCase();
         return ((annotation.indexOf(searchStr) > -1 ) && (input_value.length != 0));
     };
@@ -176,7 +180,7 @@ const search_annotation= function (input_value) {
 window.search_annotation=search_annotation;
 
 //** create dropdown menu for species selection
-create_species_dropdown('#species-selector', species_dt);
+create_species_dropdown('#species-selector');
 //** setup and render autocomplete for species
 autocomplete_species();
 
@@ -195,16 +199,14 @@ const trigger_triplet_button = function(){
 }
 trigger_triplet_button();
 
-speciesTree("speciesTree", datapath.coreTree_path, handleSpeciesTree);
+speciesTree("speciesTree", strainTree(), handleSpeciesTree);
 // /** tree rotate listener */
 // rotate_monitor('tree_rotate','mytree2');
 
 
 
 /** render interactive charts and gene-cluster datatable */
-//console.log("render_viewer:",datapath);
-//myDatatable =
-render_chart_table.initData(datapath.path_datatable1,cluster_table_id, 'GC_tablecol_select',
+render_chart_table.initData(cluster_table_id, 'GC_tablecol_select',
     'dc_data_count','dc_straincount_chart','dc_geneLength_chart','dc_coreAcc_piechart',
     'changeCoreThreshold','coreThreshold',
     'speciesTreeDiv','geneTreeDiv', null, mySpeciesTree, handleDataTable, handleGeneTree);
