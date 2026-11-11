@@ -103,6 +103,10 @@ schemas: _node-modules
 schemas-check: _node-modules
     bun --bun packages/data-format/scripts/schemas.ts --check {{ schemas_dir }}
 
+# Upload the build of packages/app/dist to the app bucket AWS_S3_BUCKET under AWS_S3_PREFIX; `--dry-run` lists the writes and sends no request
+publish *args: _node-modules
+    bun packages/app/scripts/publish.ts "$@"
+
 # Write .config/mise.lock for every platform after a change to .config/mise.toml; name tools to lock only those
 tools-lock *tools:
     mise lock --platform linux-x64,linux-arm64,macos-x64,macos-arm64 "$@"
