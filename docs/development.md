@@ -53,11 +53,11 @@ The build takes the data root from `VITE_DATA_URL` and fails without it. `just d
 | `just dev`         | the Vite dev server of the app on port 8000, with the data of `PANX_DATA`; for a folder also the local data host on port 8001             |
 | `just serve`       | a production build with the data of `PANX_DATA`, then the local app host on port 8000 and, for a folder, the local data host on port 8001 |
 | `just build`       | a production build into `packages/app/dist/`; needs `VITE_DATA_URL`, and takes `VITE_PLAUSIBLE_DOMAIN` for the analytics tag              |
-| `just verify-data` | check the data root of `PANX_DATA` against the data format                                                                                |
+| `just verify-data` | check the data root of `PANX_DATA` against the data format ([Data checks](#data-checks))                                                  |
 | `just schemas`     | write the JSON Schema files of `docs/schemas/` from the schemas of `packages/data-format`                                                 |
 | `just check`       | the format check, the lints, the type check, and the check that the JSON Schema files are current                                         |
 | `just fmt`         | format the TypeScript, the root files, the shell scripts, and the justfile                                                                |
-| `just publish`     | upload a build to the app bucket                                                                                                          |
+| `just publish`     | upload the build of `packages/app/dist/` to the app bucket; `--dry-run` lists the writes ([App publish](#app-publish))                     |
 | `just tools-lock`  | write `.config/mise.lock` after a change of `.config/mise.toml`                                                                           |
 
 Examples:
@@ -86,6 +86,63 @@ The viewer libraries keep their major lines of the old site: d3 3, dc 2, crossfi
 - the app host serves `index.html` for every path whose last segment has no `.`, each file with the `Cache-Control` of its folder (`packages/local-server/src/app-site.ts`), every answer with the Content-Security-Policy of the site, and a missing file with status 404 and `404.html`
 - the data host serves the object headers of `packages/data-format/src/headers.ts`, `Access-Control-Allow-Origin: *`, single byte ranges as S3 answers them, and no compression of its own
 - both hosts serve only paths that follow the key rules of the data format inside their folder, and answer 403 to methods other than `GET` and `HEAD`, as CloudFront does, so a CORS preflight fails locally too. Any website can send requests to `127.0.0.1` and read the answers of the data host, so no path resolves outside the served folder
+
+## Data checks
+
+`just verify-data` (`packages/data-format/src/cli.ts`) checks the data root of `PANX_DATA` against the rules of [What makes a deployment valid](data-format.md#what-makes-a-deployment-valid):
+
+- **A folder** gets every check: every JSON file against its schema and the files around it, every text object, the pack member by member with the files of each cluster, the alignment archives, and the manifest with the size and SHA-256 of every file
+- **A URL** gets the HTTP checks: a `HEAD` of every object with an `Origin` header (its headers, `Content-Length`, and `Access-Control-Allow-Origin: *`), range reads of the first and the last cluster of each pack, and a 4xx answer for a path that does not exist, beside the checks of the index files and `clusters.json`, which it reads. `--deep` also downloads every object and runs every check of a folder on it
+- **Releases**: every release of `releases.json`, or with `--release <id>` only that release, also when `releases.json` does not list it yet or does not exist, as before the first publication
+- **Linked datasets**: the default release, and a release of `--release` that `releases.json` does not list, must have the datasets of `packages/app/src/pages/linked-datasets.json`; `--require <id>,...` replaces that list, and `--require ''` requires none
+- **Output**: one line per violation on stderr, `<data path>: <rule>: <message>`, and a summary on stdout. The exit status is 0 when every check passes, 1 on a violation, and 2 on a usage error. A check whose input failed its own check does not run, and the summary counts it as skipped
+- **Load**: at most 16 requests at once. A URL check sends about one request per object and three per dataset, about 2,800 for a release of 270 datasets; `--deep` adds one `GET` per object and downloads the whole release. The checks hold the files of one dataset at a time, and a pack streams member by member
+
+`just verify-data --help` lists the options and the rules:
+
+| Rule | Checks that |
+| ---- | ----------- |
+| `read` | every object of the layout exists and can be read |
+| `schema` | every JSON file is UTF-8 JSON and passes its schema |
+| `format` | every JSON file and every releases.json entry has format 1, the format of this verifier |
+| `releases-folders` | releases.json names only existing release folders |
+| `release-id` | index.json and manifest.json name the release of their folder |
+| `dataset-files` | every dataset of index.json has its folder with all 8 files |
+| `linked-datasets` | the default release has every dataset that the home page links to |
+| `dataset-id` | the id of dataset.json equals its folder name |
+| `index-counts` | strains and clusters of the index.json entry equal the counts in dataset.json and clusters.json |
+| `newick-tips` | the tips of strain_tree.nwk equal the strains |
+| `metadata-tsv` | metadata.tsv equals the rendering of the strains |
+| `cluster-extra` | extra of every cluster has exactly the cluster_columns keys |
+| `loci-length` | loci has the length of clusters |
+| `patterns-length` | every _patterns.json has one character per non-root node of the strain tree |
+| `accessions` | every gene-tree tip and every FASTA record except consensus names a strain of the dataset |
+| `reduced-alignment` | a reduced alignment holds an optional first consensus, then exactly the records of its full alignment |
+| `loci` | loci[i] equals the record identifiers of the full nucleotide alignment of clusters[i], in record order |
+| `pack` | the pack: contiguous ranges, one gzip member per cluster with the fixed header, ustar entries of the cluster, the end member last |
+| `alignment-archives` | the alignment archives: one gzip stream with the fixed header, ustar, exactly the files of the rules, byte-equal to the pack |
+| `gzip` | every stored text object is one gzip member with the fixed header |
+| `manifest` | manifest.json lists exactly the files of the folder, with their size, SHA-256, and headers |
+| `http-head` | every manifest object answers HEAD with 200, its headers, and its size as Content-Length |
+| `http-cors` | every answer to a request with an Origin header has Access-Control-Allow-Origin: * |
+| `http-range` | range reads of the first and the last cluster of each pack answer 206 with their bundles |
+| `http-missing` | a path that does not exist answers 4xx |
+
+```bash
+PANX_DATA=<data root folder> dev/docker/run just verify-data
+PANX_DATA=<data root folder> dev/docker/run just verify-data --release 20261112T080000Z
+PANX_DATA=https://data.pangenome.org dev/docker/run just verify-data --release 20261112T080000Z
+PANX_DATA=https://data.pangenome.org dev/docker/run just verify-data --deep
+```
+
+## App publish
+
+`just publish` (`packages/app/scripts/publish.ts`) uploads the build of `packages/app/dist/` to the app bucket `AWS_S3_BUCKET` under the key prefix `AWS_S3_PREFIX`: the static folder first, then the images and fonts, then the pages, each file with its `Cache-Control` and with `.br` and `.gz` copies. The CI job `publish` runs it for the branches `release` and `master`. `--dry-run` lists the writes and sends no request, so it needs no AWS credentials. [deployment.md](deployment.md) describes the objects, the CI job, and the repository settings.
+
+```bash
+VITE_DATA_URL=https://data.pangenome.org dev/docker/run just build
+AWS_S3_BUCKET=<app bucket> AWS_S3_PREFIX=pangenome.org/ dev/docker/run just publish --dry-run
+```
 
 ## Manual checks
 
