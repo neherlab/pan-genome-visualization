@@ -4,6 +4,7 @@ import {
   Clusters,
   Dataset,
   dataPath,
+  Loci,
   dataUrl,
   ReleaseIndex,
   Releases,
@@ -20,6 +21,7 @@ const releasesLoader = jsonLoader(Releases);
 const indexLoader = jsonLoader(ReleaseIndex);
 const datasetLoader = jsonLoader(Dataset);
 const clustersLoader = jsonLoader(Clusters);
+const lociLoader = jsonLoader(Loci);
 
 /** Return the URL of a data path under the data root. */
 export function dataFileUrl(path: string): string {
@@ -54,6 +56,19 @@ export async function loadDataset(release: string, dataset: string): Promise<Dat
 /** Load the `clusters.json` of a dataset. */
 export function loadClusters(release: string, dataset: string): Promise<Clusters> {
   return clustersLoader(dataFileUrl(dataPath({ kind: "dataset", release, dataset, file: "clusters.json" })));
+}
+
+/** Load the `loci.json` of a dataset, and check that it lists the genes of each of its `clusters` clusters. */
+export async function loadLoci(release: string, dataset: string, clusters: number): Promise<Loci> {
+  const url = dataFileUrl(dataPath({ kind: "dataset", release, dataset, file: "loci.json" }));
+  const file = await lociLoader(url);
+  if (file.loci.length !== clusters) {
+    throw new DataError(url, {
+      kind: "schema",
+      message: `lists the genes of ${file.loci.length} clusters in place of ${clusters}`,
+    });
+  }
+  return file;
 }
 
 /** The release that a page shows. */

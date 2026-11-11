@@ -2,31 +2,38 @@ import d3 from "d3";
 import $ from 'jquery';
 import {button_tooltip, append_download_button} from './tooltips';
 import {panXClusterTable} from './global';
+import {clusterColumns, clusters, datasetFileUrl, datasetId, release} from './context';
+import {describeReason, DataError, loadLoci} from '../data';
 
-export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
+/** Return the text of a gene name or annotation, `None` for a gene without one. */
+export const nameText = function(name){
+    return name ?? 'None';
+};
 
-if (typeof customized_standard_columns=='undefined'){
-    //## dc_DataTables configuration <div style="display:inline-block" ></div>
-    var table_columns= [
-        {'defaultContent': '<button type="button" class="btn btn-info btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="amino acid alignment" >aa </button> <button type="button" class="btn btn-primary btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="nucleotide alignment" >na </button> ',  'name':'Alignment','tooltip':'multiple sequence alignment'},
-        {'defaultContent': '', 'className': 'geneName-details-control', 'orderable': false,  'name':''},//geneName expand
-        {'data':'GName',  'name':'Name','tooltip':'gene name'},//geneName
-        {'defaultContent': '', 'className': 'ann-details-control', 'orderable': false,  'name':''},//annotation expand
-        {'data':'ann',  'name':'Annotation','tooltip':'gene annotation'},//annotation    //'width':10,
-        {'data':'count',  'name':'#Strains','tooltip':'strain count'},//count
-        {'defaultContent': '', 'className': 'dup-details-control', 'orderable': false,  'name':''},//duplication expand
-        {'data':'dupli',  'name':'Duplicated','tooltip':'whether duplicated and duplication count in each strain'},//duplication
-        {'data':'event',  'name':'Events','tooltip':'gene gain/loss events count'},
-        {'data':'divers',  'name':'Diversity','tooltip':'gene diversity'},
-        {'data':'geneLen',  'name':'Length','tooltip':'average gene length'},
-        {'data':'geneId','visible': false,  'name':'','tooltip':''},
-        {'data':'allAnn','visible': false,  'name':'','tooltip':''},
-        {'data':'allGName','visible': false,  'name':'','tooltip':''},
-        {'defaultContent': '','data':'locus','visible': false,  'name':'','tooltip':''}
-        //{'data':'msa','visible': false}
-    ];
-} else {
-    var table_columns=customized_standard_columns;
+//## dc_DataTables configuration <div style="display:inline-block" ></div>
+//** rows: the clusters of clusters.json with `rank` (row position + 1) and `locus` (the locus tags, see `loadLocusTags`)
+var table_columns= [
+    {'defaultContent': '<button type="button" class="btn btn-info btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="amino acid alignment" >aa </button> <button type="button" class="btn btn-primary btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="nucleotide alignment" >na </button> ',  'name':'Alignment','tooltip':'multiple sequence alignment'},
+    {'defaultContent': '', 'className': 'geneName-details-control', 'orderable': false,  'name':''},//geneName expand
+    {'data':'gene', 'render': nameText, 'name':'Name','tooltip':'gene name'},//geneName
+    {'defaultContent': '', 'className': 'ann-details-control', 'orderable': false,  'name':''},//annotation expand
+    {'data':'annotation', 'render': nameText, 'name':'Annotation','tooltip':'gene annotation'},//annotation    //'width':10,
+    {'data':'strains',  'name':'#Strains','tooltip':'strain count'},//count
+    {'defaultContent': '', 'className': 'dup-details-control', 'orderable': false,  'name':''},//duplication expand
+    {'data':function(row){return row.duplications.length ? 'yes' : 'no';},  'name':'Duplicated','tooltip':'whether duplicated and duplication count in each strain'},//duplication
+    {'data':'events',  'name':'Events','tooltip':'gene gain/loss events count'},
+    {'data':'diversity', 'defaultContent': '', 'name':'Diversity','tooltip':'gene diversity'},
+    {'data':'length',  'name':'Length','tooltip':'average gene length'},
+    {'data':'rank','visible': false,  'name':'','tooltip':''},
+    {'data':function(row){return searchNames(row.annotations);},'visible': false,  'name':'','tooltip':''},
+    {'data':function(row){return searchNames(row.genes);},'visible': false,  'name':'','tooltip':''},
+    {'defaultContent': '','data':'locus','visible': false,  'name':'','tooltip':''}
+    //{'data':'msa','visible': false}
+];
+
+/** Return the names of `[name, count]` pairs, joined by spaces, for the hidden searchable columns. */
+function searchNames(pairs){
+    return pairs.filter(function(pair){return pair[0]!==null;}).map(function(pair){return pair[0];}).join(' ');
 }
 
 //** column header title for display
@@ -45,23 +52,20 @@ for (let i=0, len=table_columns.length ; i<len; i++) {
     }
 }
 
-//** if new_column_config.js is given, add new column to the cluster table
-//** insert the column after insertion_position (insertion_pos)
-//** e.g.: col_header:'PAO1'
-var insertion_index, new_column_header, new_column_data;
-if (typeof new_columns_config!='undefined'){
-    for (let new_column_config of new_columns_config) {
-        if (!new_column_config['new_col']['group name']){
-            new_column_data=new_column_config.new_col;
-            new_column_header=new_column_data['name'];
-            insertion_index= geneCluster_table_columns.indexOf(new_column_config.insertion_pos)+1;
-            //** insert new header and related tooltip
-            geneCluster_table_columns.splice(insertion_index, 0, new_column_header);
-            clusterTable_tooltip_dict[new_column_header]=new_column_data['tooltip']
-            //** insert data linked with new header for datatable initialization (column_config)
-            table_columns.splice(insertion_index, 0, new_column_data);
-        }
-    }
+//** add the extra columns of the dataset (cluster_columns of dataset.json) after the column "Length", in their order
+var insertion_index= geneCluster_table_columns.indexOf('Length')+1;
+for (const cluster_column of clusterColumns) {
+    const new_column_data= {
+        'data': function(row){return row.extra[cluster_column.key] ?? null;},
+        'defaultContent': '',
+        'name': cluster_column.label,
+        'tooltip': cluster_column.description,
+        'group': cluster_column.group
+    };
+    geneCluster_table_columns.splice(insertion_index, 0, new_column_data.name);
+    clusterTable_tooltip_dict[new_column_data.name]=new_column_data.tooltip;
+    table_columns.splice(insertion_index, 0, new_column_data);
+    insertion_index+=1;
 }
 
 //** prepare column configuration for cluster datatable
@@ -229,26 +233,16 @@ export const datatable_configuration = function(table_input, table_id, col_selec
         }
     });
 
-    //** append multiselect button for association columns to cluster table
-    if (typeof new_columns_config!='undefined' && typeof apply_association_cols!='undefined'){
+    //** append multiselect button for the groups of extra columns to cluster table
+    if (clusterColumns.length){
         const association_id='association';
         create_dropdown_button(table_id, association_id, true)
 
-        const GC_table_association_keys= new_columns_config
-                                    .filter(function(n){ return n.new_col['group name']})
-                                    .map(function(n){ return n.new_col['group name']});
         var GC_table_association_groups={};
-        for(var i=0, len=GC_table_association_keys.length; i < len; i++) {
-            const group_name= GC_table_association_keys[i];
-            const GC_table_association= new_columns_config
-                                    .filter(function(n){ return n.new_col['group']==group_name})
-                                    .map(function(n){ return n.new_col['name']});
-            GC_table_association_groups[group_name]=GC_table_association;
-
+        for (const cluster_column of clusterColumns) {
+            (GC_table_association_groups[cluster_column.group] ??= []).push(cluster_column.label);
         }
-        //const standard_columns='';
         create_multiselect('#'+association_id, '', GC_table_association_groups);
-        var association_column=[];
         $('#'+association_id).multiselect({
             enableFiltering: true,
             //includeSelectAllOption: true,
@@ -256,10 +250,6 @@ export const datatable_configuration = function(table_input, table_id, col_selec
             enableClickableOptGroups: true,
             enableCollapsibleOptGroups: true,
             onChange: function(element, checked) {
-                /*for (var i = 0, len=association_column.length; i < len; i++) {
-                    association_column[i].visible(false);
-                }*/
-
                 //** search column via name (header name)
                 var column_selected =datatable.column( element.val()+':name');
                 if (checked === true) {
@@ -267,7 +257,6 @@ export const datatable_configuration = function(table_input, table_id, col_selec
                 }else{
                     column_selected.visible(false);
                 }
-                //association_column.push(column_selected);
             }
         });
     }
@@ -280,19 +269,53 @@ export const datatable_configuration = function(table_input, table_id, col_selec
         unselect_clusterTable(table_id);
     })
 
-    //** append download button for all core genes
-    append_download_button('#'+table_id+'_filter.dataTables_filter', 'core_gene_alignments', `${DATA_ROOT_URL}/dataset/${speciesAbbr}/core_gene_alignments.zip`);
-    append_download_button('#'+table_id+'_filter.dataTables_filter', 'all_gene_alignments', `${DATA_ROOT_URL}/dataset/${speciesAbbr}/all_gene_alignments.zip`);
-    //append_download_button('#'+table_id+'_filter.dataTables_filter', 'core_gene_trees', '/dataset/'+speciesAbbr+'/core_gene_trees.tar.gz');
+    //** append download buttons for the core gene and all gene alignments and all gene cluster files
+    append_download_button('#'+table_id+'_filter.dataTables_filter', 'core_gene_alignments', datasetFileUrl('core_gene_alignments.tar.gz'));
+    append_download_button('#'+table_id+'_filter.dataTables_filter', 'all_gene_alignments', datasetFileUrl('all_gene_alignments.tar.gz'));
+    append_download_button('#'+table_id+'_filter.dataTables_filter', 'gene_clusters', datasetFileUrl('gene_clusters.tar.gz'));
     const dt_button_tooltip_dict= {
     //**download core genes
     'core_gene_alignments': 'download core gene alignments',
     'all_gene_alignments': 'download all gene alignments',
-    //'core_gene_trees': 'download core gene trees'
+    'gene_clusters': 'download all gene cluster files'
     }
     button_tooltip('#'+table_id+'_filter', dt_button_tooltip_dict);
 
+    load_locus_tags_on_search(datatable, table_id, table_input);
+
     return datatable;
+};
+
+/**
+ * Fill the hidden `locus` column on the first non-empty search of the table: load loci.json, set each row's locus tags
+ * (`<accession>_<locus_tag>`, joined by spaces), and search again. A failed load shows its error, and the next search
+ * tries again.
+ */
+const load_locus_tags_on_search = function(datatable, table_id, rows) {
+    var state = 'empty'; //** empty, loading, or loaded
+    const status = $('<span class="locus-tags-status" style="margin-left:6px"></span>')
+        .insertAfter('#'+table_id+'_filter label');
+    datatable.on('search.dt', function() {
+        if (state!=='empty' || datatable.search()==='') {
+            return;
+        }
+        state = 'loading';
+        status.text('loading locus tags');
+        loadLoci(release.id, datasetId, clusters.length).then(function(file) {
+            //** every row, also the rows that a chart filter has taken out of the table
+            for (const row of rows) {
+                row.locus = file.loci[row.rank-1].map(function(locus){return locus.replaceAll('|', '_');}).join(' ');
+            }
+            state = 'loaded';
+            status.text('');
+            datatable.rows().invalidate('data').draw(false);
+        }, function(error) {
+            console.error(error);
+            state = 'empty';
+            const reason = error instanceof DataError ? describeReason(error.reason) : String(error);
+            status.text(`locus tags failed to load: ${reason}`);
+        });
+    });
 };
 
 export const filterClusterDataTable = function(dataTableID, tree)

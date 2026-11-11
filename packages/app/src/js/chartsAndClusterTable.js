@@ -8,6 +8,7 @@ import {pie} from "./chart_style";
 import * as dtab  from "./datatable-gc";
 import {loadNewGeneCluster} from "./linkTableAlignmentTrees";
 import {tooltip_tableHeader} from "./tooltips";
+import {clusters, dataset} from "./context";
 
 var init_core_threshold=0.99;
 
@@ -65,21 +66,21 @@ export const render_chart_table = {
 
         // Dimension by geneId
         var geneCountDimension = ndx.dimension(function (d) {
-            return d.geneId;});
+            return d.rank;});
         // Group by geneCount
         var geneCountGroup = geneCountDimension.group()
-            .reduceSum(function (d) {return d.count;});
+            .reduceSum(function (d) {return d.strains;});
 
         // Dimension by geneLength
         var geneLengthValue = ndx.dimension(function (d) {
-            return d.geneLen;});
+            return d.length;});
         //Group by total movement within month
         var geneLengthGroup = geneLengthValue.group()
 
         //##  pie chart
         // reusable function to create threshold dimension
         function coreCount_from_threshold() {
-            var totalStrainNumber=data[1].count;
+            var totalStrainNumber=dataset.strains.length;
             var coreThreshold=document.getElementById(coreThreshold_text_id).value;
             coreThreshold=parseFloat(coreThreshold);
             if (isNaN(coreThreshold)) {
@@ -88,20 +89,20 @@ export const render_chart_table = {
             return ndx.dimension(function (d) {
                 // add option later
                 if (true){
-                    if (d.count >= totalStrainNumber*coreThreshold){
+                    if (d.strains >= totalStrainNumber*coreThreshold){
                         return 'core';
                     }
                     else {
                         return 'acc';
                     }
                 } else{
-                    if (d.count >= totalStrainNumber*coreThreshold){
-                        if (d.dup_detail==''){
+                    if (d.strains >= totalStrainNumber*coreThreshold){
+                        if (d.duplications.length==0){
                             return 'core(s)';
                         }else {
                             return 'core';
                         }
-                    }else if (d.count!=1){
+                    }else if (d.strains!=1){
                         return 'acc';
                     }else {
                         return 'unique';
@@ -136,7 +137,7 @@ export const render_chart_table = {
             //.renderDataPoints(true)
             //.clipPadding(10)
 
-        var geneLengthMax=Math.max.apply(Math,data.map(function(o){return o.geneLen;}))
+        var geneLengthMax=d3.max(data, function(o){return o.length;})
         geneLengthBarChart
             .width(barChart_width).height(barChart_height) //winInnerWidth/3.5
             //.margins({top: 10, right: 10, bottom: 20, left: 40})
@@ -260,24 +261,21 @@ export const render_chart_table = {
 
         return datatable;
     },
-    initData: function (path_datatable1, table_id, col_select_id,
+    initData: function (table_id, col_select_id,
         count_id, chart1_id, chart2_id, chart3_id,
         coreThreshold_slider_id, coreThreshold_text_id,
         strain_tree_id,gene_tree_id, tool_side, species_tree, handleDataTable, handleGeneTree) {
-        //## load the data, charts and MSA
-        var datatable;
-        d3.json(path_datatable1, function(error, data) {
-            if(error){
-                alert('Special characters are found in your geneCluster.json. Please harmonize it and try again. Error detail: '+error);
-            }
-            var first_cluster = data[0];
-            datatable = render_chart_table.initChart(data, table_id, col_select_id,
-                count_id, chart1_id, chart2_id, chart3_id,
-                coreThreshold_slider_id, coreThreshold_text_id,
-                first_cluster=data[0], strain_tree_id,gene_tree_id,tool_side);
-            loadNewGeneCluster(first_cluster, species_tree, handleGeneTree, 'aa');
-            handleDataTable(datatable);
+        //## the rows of the charts and the table: the clusters of clusters.json with their rank and locus tags
+        var data = clusters.map(function(cluster, index){
+            return Object.assign({}, cluster, {rank: index+1, locus: ''});
         });
+        var first_cluster = data[0];
+        var datatable = render_chart_table.initChart(data, table_id, col_select_id,
+            count_id, chart1_id, chart2_id, chart3_id,
+            coreThreshold_slider_id, coreThreshold_text_id,
+            first_cluster, strain_tree_id,gene_tree_id,tool_side);
+        loadNewGeneCluster(first_cluster, species_tree, handleGeneTree, 'aa');
+        handleDataTable(datatable);
     }
 };
 
@@ -288,77 +286,35 @@ export const render_chart_table = {
  */
 var trigger_action_table= function(){
     /**
-     * extract all annotations by processing inital condensed all_annotation string
-     * e.g.: allAnn='arginine/ornithine_transporter_AotQ#36@arginine/ornithine_transport_protein_AotQ#2@arginine/ornithine_ABC_transporter_permease_AotQ:1'
-     * @param  {Object} d : object loaded from datatable json file
-     * @return {str}      : all annotation details in HTML format
+     * HTML table of `[name, count]` pairs for an expanded row
+     * @param  {str} title    : title of the first column
+     * @param  {Array} pairs  : pairs of a name (or null) and its count
+     * @return {str}          : the details in HTML format
      */
+    function format_pairs(title, pairs) {
+        var table_Str='<table cellpadding="5" cellspacing="0" border="0" style="padding-right:50px;">'+
+            '<tr><td>'+title+'</td> <td>Counts:</td></tr>';
+        for (var i=0;i<pairs.length;i++) {
+            table_Str+='<tr><td>'+dtab.nameText(pairs[i][0])+'</td> <td>'+pairs[i][1]+'</td>'+'</tr>';
+        }
+        table_Str+='</table>';
+        return table_Str;
+    }
+
+    /** all annotations of a cluster with their counts */
     function format_annotation(d) {
-        // 'd' is the original data object for the row
-        // Example: allAnn='arginine/ornithine_transporter_AotQ#36@arginine/ornithine_transport_protein_AotQ#2@arginine/ornithine_ABC_transporter_permease_AotQ:1'
-        var annSplit = d.allAnn.split("@");
-        var ann_Table_Str='<table cellpadding="5" cellspacing="0" border="0" style="padding-right:50px;">'+
-            '<tr><td>Annotation detail:</td> <td>Counts:</td></tr>';
-        for (var i=0;i<annSplit.length;i++) {
-            var annCountSplit=annSplit[i].split("#");
-            var annInfo=annCountSplit[0];
-            var annCount=annCountSplit[1];
-            ann_Table_Str+='<tr><td>'+annInfo+'</td> <td>'+annCount+'</td>'+'</tr>';
-        }
-        ann_Table_Str+='</table>';
-        return ann_Table_Str;
-        /** HTML structure when unfolding the Plus button in table
-        return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
-            '<tr>'+
-                '<td>Full name:</td>'+
-                '<td>'+d.ann+'</td>'+
-            '</tr>'+
-        '</table>';
-         */
+        return format_pairs('Annotation detail:', d.annotations);
     }
 
-    /**
-     * extract duplicated strain name by processing inital condensed duplication-info string
-     * e.g.: dup_detail='gene1#2@gene12#1'
-     * @param  {Object} d : object loaded from datatable json file
-     * @return {str}      : duplicated strain details in HTML format
-     */
+    /** the strains with more than one copy of the gene, with their copy counts */
     function format_dup_detail(d) {
-        //
-        var dupSplit = d.dup_detail.split("@");
-        var dup_Table_Str='<table cellpadding="5" cellspacing="0" border="0" style="padding-right:50px;">'+
-            '<tr><td>strain name:</td> <td>Counts:</td></tr>';
-        for (var i=0;i<dupSplit.length;i++) {
-            var dupCountSplit=dupSplit[i].split("#");
-            var strainName =dupCountSplit[0];
-            var geneCount=dupCountSplit[1];
-            if (geneCount==undefined) {
-                geneCount='';
-            }
-            dup_Table_Str+='<tr><td>'+strainName+'</td> <td>'+geneCount+'</td>'+'</tr>';
-        }
-        dup_Table_Str+='</table>';
-        return dup_Table_Str;
+        //** a cluster without duplications shows `None`, as the pipeline output did
+        return format_pairs('strain name:', d.duplications.length ? d.duplications : [['None', '']]);
     }
 
-    /**
-     * process all annotation details from inital condensed annotation string
-     * e.g.: allGName='arginine/ornithine_transporter_AotQ#36@arginine/ornithine_transport_protein_AotQ#2@arginine/ornithine_ABC_transporter_permease_AotQ:1'
-     * @param  {object} d : object loaded from datatable json file
-     * @return {str}      : gene name details in HTML format
-     */
+    /** all gene names of a cluster with their counts */
     function format_geneNames(d) {
-        var geneName_Split = d.allGName.split("@");
-        var geneName_Table_Str='<table cellpadding="5" cellspacing="0" border="0" style="padding-right:50px;">'+
-                                '<tr><td>geneName detail:</td> <td>Counts:</td></tr>';
-        for (var i=0;i<geneName_Split.length;i++) {
-            var geneName_CountSplit=geneName_Split[i].split("#");
-            var geneName_Info=geneName_CountSplit[0];
-            var geneName_Count=geneName_CountSplit[1];
-            geneName_Table_Str+='<tr><td>'+geneName_Info+'</td> <td>'+geneName_Count+'</td>'+'</tr>';
-        }
-        geneName_Table_Str+='</table>';
-        return geneName_Table_Str;
+        return format_pairs('geneName detail:', d.genes);
     }
 
     /**
