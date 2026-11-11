@@ -2,7 +2,7 @@
 
 Third-party scripts that the viewer imports from this folder, because no package of their release is in use:
 
-- `msa-niaid.js`: a build of the BioJS MSA viewer (`msa`) with changes of its own; sets `window.msa`
+- `msa-niaid.js`: a build of the BioJS MSA viewer (`msa`) with changes of its own; sets `window.msa`. The icon spans of its zoom panel carry the base class `glyphicon`, because Bootstrap sets the icon font only on that class, and the upstream template names only `glyphicon-zoom-out`, `glyphicon-zoom-in`, and `glyphicon-repeat`, which renders each icon as an empty box
 - `autocomplete.js`: the species autocomplete of BrightPoint Consulting (MIT), an ES module on d3
 - `pace.min.js`: Pace 1.0.0, the page load progress bar
 - `gifffer.min.js`: Gifffer, the play button for animated GIFs; sets `window.Gifffer`
