@@ -382,6 +382,8 @@ Archives and objects:
 - **Pack**: the ranges follow [the pack rules](#the-pack-gene_clusterstargz) (start at 0, no gaps, end member last, nothing after it). Each member decompresses to ustar entries with exactly the names and order of [Entries of a cluster](#entries-of-a-cluster) for its cluster id and kind, with no zero block before the last member
 - **Alignment archives** hold exactly the files of [Other downloads](#other-downloads), byte-equal to the full alignments of the pack
 - Every stored text object is one gzip member
+- Every stored text object, every member of the pack, and each alignment archive starts with the fixed gzip header of [Encodings](#encodings), and each alignment archive is one gzip stream
+- Every tar entry of the pack and of the alignment archives has mode `0644`, uid and gid 0, and empty user and group names
 - `manifest.json` lists exactly the files of the folder, with their size, SHA-256, and the headers of their path
 
 A deployed data root, in addition:

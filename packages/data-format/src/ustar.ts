@@ -1,6 +1,8 @@
 /** Reader of POSIX ustar archives that hold regular files only, the tar format of the pack and the downloads. */
 
-const BLOCK = 512;
+/** Size of a tar header and of the unit that pads entry data. */
+export const USTAR_BLOCK = 512;
+const BLOCK = USTAR_BLOCK;
 
 /** One regular file of a ustar archive. */
 export interface UstarEntry {
@@ -59,7 +61,8 @@ function octal(header: Uint8Array, start: number, length: number, what: string, 
   return Number.parseInt(digits, 8);
 }
 
-function isZeroBlock(block: Uint8Array): boolean {
+/** Return whether a block holds only zero bytes, as the end marker does. */
+export function isZeroBlock(block: Uint8Array): boolean {
   return block.every((byte) => byte === 0);
 }
 
@@ -72,7 +75,14 @@ function headerChecksum(header: Uint8Array): number {
   return sum;
 }
 
-function parseHeader(bytes: Uint8Array, offset: number): Omit<UstarEntry, "data"> & { readonly size: number } {
+/**
+ * Parse the 512-byte header at `offset` of `bytes`: check its checksum, the ustar magic, and type `0`, and return its
+ * fields with the size of the entry data. Throw `UstarError` on any other header.
+ */
+export function parseUstarHeader(
+  bytes: Uint8Array,
+  offset: number,
+): Omit<UstarEntry, "data"> & { readonly size: number } {
   const header = bytes.subarray(offset, offset + BLOCK);
   if (octal(header, 148, 8, "checksum", offset) !== headerChecksum(header)) {
     throw new UstarError("header checksum mismatch", offset);
@@ -112,7 +122,7 @@ export function parseUstar(bytes: Uint8Array): UstarArchive {
     if (isZeroBlock(bytes.subarray(offset, offset + BLOCK))) {
       return { entries, endOffset: offset };
     }
-    const { size, ...entry } = parseHeader(bytes, offset);
+    const { size, ...entry } = parseUstarHeader(bytes, offset);
     const start = offset + BLOCK;
     const next = start + Math.ceil(size / BLOCK) * BLOCK;
     if (next > bytes.length) {

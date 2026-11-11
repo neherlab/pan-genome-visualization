@@ -91,6 +91,10 @@ serve: _node-modules
     VITE_DATA_URL="$(just _data-url)" just build
     bun packages/local-server/src/serve.ts
 
+# Check the data root of PANX_DATA against the data format: a folder gets every check, a URL the HTTP checks; `--help` lists the options and rules
+verify-data *args: _node-modules
+    bun packages/data-format/src/cli.ts "$@"
+
 # Write the JSON Schema files of docs/schemas from the zod schemas of packages/data-format
 schemas: _node-modules
     bun --bun packages/data-format/scripts/schemas.ts {{ schemas_dir }}
