@@ -1,0 +1,13 @@
+diff --git a/src/svg-utilities.js b/src/svg-utilities.js
+index 3be13572c03af1b6858574c84c3fdedefc97d209..0fc7e675501add04113481bf44e1db98586a7d11 100644
+--- a/src/svg-utilities.js
++++ b/src/svg-utilities.js
+@@ -135,7 +135,7 @@ module.exports = {
+       var thisDefs = allDefs[i];
+       thisDefs.parentNode.insertBefore(thisDefs, thisDefs);
+     }
+-  }, this.internetExplorerRedisplayInterval)
++  }, 300)
+ 
+   /**
+    * Sets the current transform matrix of an element

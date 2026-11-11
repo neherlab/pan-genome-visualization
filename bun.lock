@@ -45,6 +45,7 @@
     },
   },
   "patchedDependencies": {
+    "svg-pan-zoom@3.5.0": "patches/svg-pan-zoom@3.5.0.patch",
     "d3@3.5.17": "patches/d3@3.5.17.patch",
   },
   "packages": {
