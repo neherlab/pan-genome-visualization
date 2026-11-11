@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "patterns": {
+      "type": "string",
+      "pattern": "^[0-3]*$",
+      "description": "One character per non-root strain tree node in pre-order: 3 present, 0 absent, 1 gained, 2 lost on the branch to the node"
+    }
+  },
+  "required": [
+    "patterns"
+  ],
+  "additionalProperties": {},
+  "title": "<id>_patterns.json",
+  "description": "The gain and loss pattern of a cluster"
+}

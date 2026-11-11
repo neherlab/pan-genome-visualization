@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "Format of the data files"
+    },
+    "release": {
+      "type": "string",
+      "pattern": "^\\d{8}T\\d{6}Z$",
+      "description": "UTC creation time, ISO 8601 basic format"
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "const": "https://github.com/neherlab/pan-genome-analysis"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "uncommitted_changes": {
+          "type": "boolean"
+        },
+        "python": {
+          "type": "string"
+        },
+        "zlib": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the MD5SUMS file of the input snapshot"
+        },
+        "recipe": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the recipe file"
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "uncommitted_changes",
+        "python",
+        "zlib",
+        "snapshot",
+        "recipe"
+      ],
+      "additionalProperties": {}
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path relative to the release folder"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentEncoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "gzip"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cacheControl": {
+            "type": "string"
+          },
+          "contentDisposition": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "size",
+          "sha256",
+          "contentType",
+          "contentEncoding",
+          "cacheControl",
+          "contentDisposition"
+        ],
+        "additionalProperties": {}
+      },
+      "description": "Every object of the release folder except manifest.json"
+    }
+  },
+  "required": [
+    "format",
+    "release",
+    "build",
+    "objects"
+  ],
+  "additionalProperties": {},
+  "title": "manifest.json",
+  "description": "The objects of a release and the build that wrote them"
+}

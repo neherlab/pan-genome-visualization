@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "Format of the data files"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^(?!(?:tutorial|pipeline|pathogens|index)$)[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "strain_tree": {
+      "$ref": "#/$defs/StrainTreeNode"
+    },
+    "metadata": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "const": "discrete"
+              }
+            },
+            "required": [
+              "key",
+              "type"
+            ],
+            "additionalProperties": {}
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "const": "continuous"
+              },
+              "scale": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "log2"
+                ]
+              },
+              "numbers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "description": "Number of each value; other values are unknown"
+              }
+            },
+            "required": [
+              "key",
+              "type",
+              "scale",
+              "numbers"
+            ],
+            "additionalProperties": {}
+          },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "const": "text"
+              }
+            },
+            "required": [
+              "key",
+              "type"
+            ],
+            "additionalProperties": {}
+          }
+        ]
+      },
+      "description": "Metadata columns in display order"
+    },
+    "strains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "accession": {
+            "type": "string"
+          },
+          "strain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "values": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "Value of every metadata key"
+          }
+        },
+        "required": [
+          "accession",
+          "strain",
+          "values"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "cluster_columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "group",
+          "description"
+        ],
+        "additionalProperties": {}
+      },
+      "description": "Extra cluster table columns after Length"
+    },
+    "accession_url": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "includes",
+          "pattern": "\\{accession\\}"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "URL template of an accession page, or null when accessions have no public page"
+    }
+  },
+  "required": [
+    "format",
+    "id",
+    "strain_tree",
+    "metadata",
+    "strains",
+    "cluster_columns",
+    "accession_url"
+  ],
+  "additionalProperties": {},
+  "title": "dataset.json",
+  "description": "Strain tree, strains, metadata columns, and cluster columns of a dataset",
+  "$defs": {
+    "StrainTreeNode": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "branch_length": {
+          "type": "number",
+          "minimum": 0
+        },
+        "children": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StrainTreeNode"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "branch_length"
+      ],
+      "additionalProperties": {},
+      "description": "Inner nodes have children, tips have none"
+    }
+  }
+}

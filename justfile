@@ -20,13 +20,17 @@ fmt_root_files := "package.json tsconfig.base.json .oxfmtrc.json .oxlintrc.json 
 
 dockerfiles := "dev/docker/dev.dockerfile"
 
-# Run every check: formatting, lints, and types, keep-going
+# The JSON Schema files of the data format, written by `just schemas`.
+schemas_dir := "docs/schemas"
+
+# Run every check: formatting, lints, types, and the JSON Schema files, keep-going
 [script]
 check: _node-modules
     status=0
     just fmt-check || status=1
     just lint || status=1
     just typecheck || status=1
+    just schemas-check || status=1
     exit "${status}"
 
 # Format the TypeScript and root files (oxfmt), the shell scripts (shfmt), and the justfile
@@ -63,6 +67,14 @@ typecheck: _node-modules
       bun --bun tsc --project "${config}" || status=1
     done
     exit "${status}"
+
+# Write the JSON Schema files of docs/schemas from the zod schemas of packages/data-format
+schemas: _node-modules
+    bun --bun packages/data-format/scripts/schemas.ts {{ schemas_dir }}
+
+# Check that the JSON Schema files of docs/schemas equal fresh ones
+schemas-check: _node-modules
+    bun --bun packages/data-format/scripts/schemas.ts --check {{ schemas_dir }}
 
 # Write .config/mise.lock for every platform after a change to .config/mise.toml; name tools to lock only those
 tools-lock *tools:

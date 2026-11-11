@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "Format of the data files"
+    },
+    "loci": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[^\\s|]+\\|\\S+$"
+        }
+      },
+      "description": "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>"
+    }
+  },
+  "required": [
+    "format",
+    "loci"
+  ],
+  "additionalProperties": {},
+  "title": "loci.json",
+  "description": "The genes of each cluster of a dataset"
+}

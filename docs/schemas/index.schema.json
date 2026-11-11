@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "number",
+      "const": 1,
+      "description": "Format of the data files"
+    },
+    "release": {
+      "type": "string",
+      "pattern": "^\\d{8}T\\d{6}Z$",
+      "description": "UTC creation time, ISO 8601 basic format"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "additionalProperties": {}
+      },
+      "description": "Dataset groups in display order"
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(?!(?:tutorial|pipeline|pathogens|index)$)[A-Za-z][A-Za-z0-9_]*$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name in the species search and the downloads table"
+          },
+          "label": {
+            "type": "string",
+            "description": "Text in the dataset dropdown"
+          },
+          "category": {
+            "type": "string",
+            "description": "Id of a listed category"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source column of the downloads table"
+          },
+          "strains": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "clusters": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "label",
+          "category",
+          "source",
+          "strains",
+          "clusters"
+        ],
+        "additionalProperties": {}
+      },
+      "description": "Datasets in display order"
+    }
+  },
+  "required": [
+    "format",
+    "release",
+    "categories",
+    "datasets"
+  ],
+  "additionalProperties": {},
+  "title": "index.json",
+  "description": "The datasets of a release"
+}

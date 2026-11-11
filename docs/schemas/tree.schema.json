@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "branch_length": {
+      "type": "number"
+    },
+    "children": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GeneTreeNode"
+      }
+    },
+    "accession": {
+      "description": "Strain accession of a tip",
+      "type": "string"
+    },
+    "muts": {
+      "description": "Comma-separated nucleotide mutations, such as A23T,C56T",
+      "type": "string"
+    },
+    "aa_muts": {
+      "description": "Comma-separated amino-acid mutations",
+      "type": "string"
+    },
+    "annotation": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "branch_length"
+  ],
+  "additionalProperties": {},
+  "description": "The gene tree of a cluster",
+  "title": "<id>_tree.json",
+  "$ref": "#/$defs/GeneTreeNode",
+  "$defs": {
+    "GeneTreeNode": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "branch_length": {
+          "type": "number"
+        },
+        "children": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GeneTreeNode"
+          }
+        },
+        "accession": {
+          "description": "Strain accession of a tip",
+          "type": "string"
+        },
+        "muts": {
+          "description": "Comma-separated nucleotide mutations, such as A23T,C56T",
+          "type": "string"
+        },
+        "aa_muts": {
+          "description": "Comma-separated amino-acid mutations",
+          "type": "string"
+        },
+        "annotation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "branch_length"
+      ],
+      "additionalProperties": {},
+      "description": "Inner nodes have children, tips have an accession"
+    }
+  }
+}
