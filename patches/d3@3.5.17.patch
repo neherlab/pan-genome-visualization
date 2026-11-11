@@ -1,0 +1,12 @@
+diff --git a/d3.js b/d3.js
+index aded45c440cecdc01cfc94ca364f4102e870a1b7..0b1842e4537483abb423a99301deb77982867a20 100644
+--- a/d3.js
++++ b/d3.js
+@@ -9551,4 +9551,4 @@
+     return request.responseXML;
+   });
+   if (typeof define === "function" && define.amd) this.d3 = d3, define(d3); else if (typeof module === "object" && module.exports) module.exports = d3; else this.d3 = d3;
+-}();
+\ No newline at end of file
++}.call(globalThis);
+\ No newline at end of file

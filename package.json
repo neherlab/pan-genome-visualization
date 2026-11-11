@@ -13,5 +13,8 @@
     "oxlint": "1.91.0",
     "typescript": "7.0.2"
   },
-  "packageManager": "bun@1.4.4"
+  "packageManager": "bun@1.4.4",
+  "patchedDependencies": {
+    "d3@3.5.17": "patches/d3@3.5.17.patch"
+  }
 }
