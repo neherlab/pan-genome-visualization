@@ -85,7 +85,7 @@ export const tooltip_node = d3.tip().attr('class', 'd3-tip').html(function(d) {
         }
     }
     if (typeof d.n.aa_muts != "undefined") {
-        const aa_muts= d.n.muts, aa_muts_len= aa_muts.length;
+        const aa_muts= d.n.aa_muts, aa_muts_len= aa_muts.length;
         if (aa_muts_len!==0) {
             const aa_muts_str= (aa_muts_len>25) ?aa_muts.substr(0,25)+'...' :aa_muts;
             string += " <tr> <th class='tooltip_table_th'>amino acid mutations:</th> <td class='tooltip_table_td'> " + aa_muts_str+" </td> </tr> ";
