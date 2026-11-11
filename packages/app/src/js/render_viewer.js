@@ -35,7 +35,7 @@ const handleSpeciesTree = function(newTree){
     }
     mySpeciesTree = newTree;
     panXTree.speciesTree= mySpeciesTree;
-    attachButtons(mySpeciesTree, {
+    attachButtons(function(){return mySpeciesTree;}, {
                                   layout_radial:"speciesTreeRadial",
                                   layout_vertical:"speciesTreeVertical",
                                   layout_unroot:"speciesTreeUnroot",

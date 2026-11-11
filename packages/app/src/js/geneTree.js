@@ -8,7 +8,10 @@ import {branchLabels, tipLabels} from "../vendor/phyloTree/labels";
 import d3 from "d3";
 import geneTreeCallbacks from "./geneTreeCallbacks";
 import {panXTree,panXDashboard} from "./global";
-import {attachButtons,attachPanzoom,applyChangeToTree,colorPresenceAbsence,styleGainLoss} from "./tree-init";
+import {attachButtons,attachPanzoom,applyChangeToTree,colorPresenceAbsence,styleGainLoss,currentGeneTree,syncGeneTreeLayout} from "./tree-init";
+
+//** whether the gene tree buttons have their handlers; the handlers act on the gene tree of the shown cluster
+let buttonsBound = false;
 
 /**
  * Instantiate the gene tree and link it to the species tree
@@ -66,32 +69,32 @@ const geneTree = function(tree_svg, data, handleGeneTree, speciesTree, layout_ch
     myTree.showTipLabels=false;
     handleGeneTree(myTree);
     panXTree.currentGeneTree= myTree;
-    attachButtons(myTree, {
-                          layout_radial:"geneTreeRadial",
-                          layout_vertical:"geneTreeVertical",
-                          layout_unroot:"geneTreeUnroot",
-                          zoomInY:"geneTree_height_plus",
-                          zoomOutY:"geneTree_height_minus",
-                          scale:"geneTreeScale",
-                          tipLabels:"geneTreeLabels",
-                          orientation:"geneTreeOrientation",
-                          zoomReset:"geneTreeZoomReset",
-                          colorReset:"geneTreeColorReset",
-                          nodeLarge:"geneTree_nodePlus",
-                          nodeSmaller:"geneTree_nodeMinus",
-                          });
-
-    attachButtons(myTree, {
-                          layout_radial:"speciesTreeRadial",
-                          layout_vertical:"speciesTreeVertical",
-                          layout_unroot:"speciesTreeUnroot",
-                          scale:"speciesTreeScale"
-                          });
+    if (!buttonsBound){
+        buttonsBound=true;
+        attachButtons(currentGeneTree, {
+                              layout_radial:"geneTreeRadial",
+                              layout_vertical:"geneTreeVertical",
+                              layout_unroot:"geneTreeUnroot",
+                              zoomInY:"geneTree_height_plus",
+                              zoomOutY:"geneTree_height_minus",
+                              scale:"geneTreeScale",
+                              tipLabels:"geneTreeLabels",
+                              orientation:"geneTreeOrientation",
+                              zoomReset:"geneTreeZoomReset",
+                              colorReset:"geneTreeColorReset",
+                              nodeLarge:"geneTree_nodePlus",
+                              nodeSmaller:"geneTree_nodeMinus",
+                              });
+        if (d3.select('#speciesTreeSynchr').property('checked')){
+            syncGeneTreeLayout();
+        }
+    }
     attachPanzoom("geneTree", myTree);
     }else{
         var svg_geneTree=d3.select('#geneTree');
         svg_geneTree.selectAll("*").remove();
         panXTree.singleton_gene=true;
+        panXTree.currentGeneTree=undefined;
         styleGainLoss(speciesTree);
     }
     /*if (typeof speciesTree !== "undefined"){

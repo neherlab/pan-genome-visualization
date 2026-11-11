@@ -80,7 +80,29 @@ export const applyChangeToTree = function(myTree, func, dt){
     };
 }
 
-export const attachButtons = function(myTree, buttons){
+//** the species tree buttons that also change the gene tree while the two trees are synchronized
+const speciesLayoutButtons = {
+    layout_radial:"speciesTreeRadial",
+    layout_vertical:"speciesTreeVertical",
+    layout_unroot:"speciesTreeUnroot",
+    scale:"speciesTreeScale"
+};
+
+//** return the gene tree of the shown cluster, or undefined when the cluster has no gene tree
+export const currentGeneTree = function(){
+    return panXTree.currentGeneTree;
+};
+
+//** let the species tree layout buttons also change the shown gene tree
+export const syncGeneTreeLayout = function(){
+    attachButtons(currentGeneTree, speciesLayoutButtons);
+};
+
+/**
+ * Bind the handlers of tree buttons; each handler acts on the tree that getTree returns at the click, and does
+ * nothing while it returns undefined
+ */
+export const attachButtons = function(getTree, buttons){
     const dt = 1000;
     const updateSelected=false;
     /*if (buttons.layout){
@@ -92,6 +114,8 @@ export const attachButtons = function(myTree, buttons){
     }*/
     if (buttons.layout_radial){
         $('#'+buttons.layout_radial).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.layout =  'radial';
             panXTree.currentTreeLayout= myTree.layout;
             applyChangeToTree(myTree, function(){changeLayout(myTree, dt);}, dt);
@@ -99,6 +123,8 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.layout_vertical){
         $('#'+buttons.layout_vertical).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.layout =  'rect';
             panXTree.currentTreeLayout= myTree.layout;
             applyChangeToTree(myTree, function(){changeLayout(myTree, dt);}, dt);
@@ -106,6 +132,8 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.layout_unroot){
         $('#'+buttons.layout_unroot).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.layout =  'unrooted';
             panXTree.currentTreeLayout= myTree.layout;
             applyChangeToTree(myTree, function(){changeLayout(myTree, dt);}, dt);
@@ -113,12 +141,16 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.orientation){
         $('#'+buttons.orientation).change(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.orientation =  (d3.select(this).property('checked')==true) ? {x:-1, y:1} : {x:1, y:1};
             applyChangeToTree(myTree, function(){changeLayout(myTree, dt);}, dt);
         });
     }
     if (buttons.nodeLarge){
         $('#'+buttons.nodeLarge).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.tips.forEach(function(d,i){
             d.tipAttributes.r *= 1.5;
             });
@@ -127,6 +159,8 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.nodeSmaller){
         $('#'+buttons.nodeSmaller).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.tips.forEach(function(d,i){
                 d.tipAttributes.r *= 0.5;
             });
@@ -135,18 +169,24 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.zoomInY){
         $('#'+buttons.zoomInY).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             applyChangeToTree(myTree, function(){zoomInY(myTree,1.4,dt, updateSelected);},dt);
             //filterMetaDataTable('dc_data_table_meta', myTree);
         });
     }
     if (buttons.zoomOutY){
         $('#'+buttons.zoomOutY).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             applyChangeToTree(myTree, function(){zoomInY(myTree,0.7,dt, updateSelected);},dt);
             //filterMetaDataTable('dc_data_table_meta', myTree);
         });
     }
     if (buttons.zoomReset){
         $('#'+buttons.zoomReset).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             if (myTree.panZoom){
                 myTree.panZoom.reset();
             }
@@ -164,6 +204,8 @@ export const attachButtons = function(myTree, buttons){
 
     if (buttons.colorReset){
         $('#'+buttons.colorReset).click(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             resetGeneTreeColor(myTree);
         });
     }
@@ -172,34 +214,26 @@ export const attachButtons = function(myTree, buttons){
         //console.log(buttons.treeSync)
         //tooltip_toggle('#speciesTreeSynchr','synchronize toggle behaviors on both  species tree and gene tree')
         $('#'+buttons.treeSync).change(function(event) {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
 
             myTree.treeSync =d3.select(this).property('checked')
             if (myTree.treeSync){
-                var myGeneTree=panXTree.currentGeneTree;
-                attachButtons(myGeneTree, {
-                                      layout_radial:"speciesTreeRadial",
-                                      layout_vertical:"speciesTreeVertical",
-                                      layout_unroot:"speciesTreeUnroot",
-                                      scale:"speciesTreeScale"
-                                      });
+                syncGeneTreeLayout();
             }else{
                 $('#'+buttons.layout_radial).off("click");
                 $('#'+buttons.layout_vertical).off("click");
                 $('#'+buttons.layout_unroot).off("click");
                 $('#'+buttons.scale).off("change");
                 event.stopPropagation();
-                var mySpeciesTree=panXTree.speciesTree;
-                attachButtons(mySpeciesTree, {
-                                      layout_radial:"speciesTreeRadial",
-                                      layout_vertical:"speciesTreeVertical",
-                                      layout_unroot:"speciesTreeUnroot",
-                                      scale:"speciesTreeScale"
-                                      });
+                attachButtons(function(){return panXTree.speciesTree;}, speciesLayoutButtons);
             }
         });
     }
     if (buttons.tipLabels){
         $('#'+buttons.tipLabels).change(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.showTipLabels = d3.select(this).property('checked')
             //-console.log("tipLabels", myTree.visibleTips, tipFontSize(myTree)());
             if (myTree.showTipLabels){
@@ -215,6 +249,8 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.scale){
         $('#'+buttons.scale).change(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             myTree.distance = (d3.select(this).property('checked')===false) ? "level":"div";
             applyChangeToTree(myTree, function(){changeDistance(myTree, dt);},dt);
         });
@@ -245,6 +281,8 @@ export const attachButtons = function(myTree, buttons){
     }
     if (buttons.panzoom){
         $('#'+buttons.panzoom).change(function() {
+            const myTree=getTree();
+            if (myTree===undefined) {return;}
             if (myTree.panZoom){
                 const zoom_enabled = d3.select(this).property('checked');
                 if (zoom_enabled){myTree.panZoom.disableZoom();

@@ -2,7 +2,7 @@ import d3 from "d3";
 import msaLoad from './msaLoad';
 import geneTree from "./geneTree";
 import {panXTree,metaLegend,panXMetaTable} from "./global";
-import {attachButtons, hideNonSelected, undoHideNonSelected} from "./tree-init";
+import {attachButtons, currentGeneTree, hideNonSelected, undoHideNonSelected} from "./tree-init";
 import {removeLabels}  from "../vendor/phyloTree/labels";
 import {bundles} from "./context";
 import {nameText} from "./datatable-gc";
@@ -74,7 +74,7 @@ export const loadNewGeneCluster = async function(data, speciesTree, handleGeneTr
     }
     //** the viewer adds its own fields to the tree nodes, so it gets a copy of the cached tree
     var myGeneTree=geneTree("geneTree", bundle.tree===undefined ? undefined : structuredClone(bundle.tree), handleGeneTree, speciesTree, panXTree.currentTreeLayout);
-    attachButtons(myGeneTree, { download_geneTree:"download_geneTree",
+    attachButtons(currentGeneTree, { download_geneTree:"download_geneTree",
                             clusterID:clusterID, nwk:bundle.nwk });
 
     //change_select_dropdown_value("dropdown_select",'genePattern');
@@ -139,17 +139,17 @@ export const linkTableAlignmentTrees = function(clusterTableID, metaTableId, dat
                 if (!$(this).hasClass("row_selected")){
                     $('#'+clusterTableID+' tbody tr').removeClass('row_selected');
                     $(this).addClass('row_selected');
-                    //** select related tips in geneTree with the same annotation
-                    if (is_annotation){
+                    //** select related tips in geneTree with the same annotation, when the cluster has a gene tree
+                    if (myGeneTree!==undefined && is_annotation){
                         table_childrow_select_tip(cell_text,myGeneTree,'annotation');
-                    } else if (is_geneName){
+                    } else if (myGeneTree!==undefined && is_geneName){
                         table_childrow_select_tip(cell_text,myGeneTree,'geneName');
-                    } else if (is_duplication){
+                    } else if (myGeneTree!==undefined && is_duplication){
                         table_childrow_select_tip(cell_text,myGeneTree,'duplication');
                     }
                 }else{ // click(unselect) the selected child row
                     $('#'+clusterTableID+' tbody tr').removeClass('row_selected');
-                    if (is_annotation||is_geneName||is_duplication){
+                    if (myGeneTree!==undefined && (is_annotation||is_geneName||is_duplication)){
                         undoHideNonSelected(myGeneTree);
                     }
                 }
