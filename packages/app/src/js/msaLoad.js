@@ -25,7 +25,6 @@ const msaLoad = function (clusterID, seqType, aln, aln_reduced, scheme_type) {
     /* global rootDiv */
     var opts = {
       el: rootDiv,
-      seqs: seqs,
       bootstrapMenu: false
     };
 
@@ -42,7 +41,6 @@ const msaLoad = function (clusterID, seqType, aln, aln_reduced, scheme_type) {
     //opts.config={};opts.conf= {alphabetSize: 1};
 
     var m =  new msa.msa(opts);    //JSON.stringify
-    m.render();
     //# click row/rows to highlight the related strain/strains
     m.g.on('row:click', function(data){
         msaViewerAsset.selected_rows_set= new Set();
@@ -71,6 +69,9 @@ const msaLoad = function (clusterID, seqType, aln, aln_reduced, scheme_type) {
     var scaleSize;
     scaleSize= (scheme_type=='nucleotide')? 2: 3;
     m.g.scale.setSize(scaleSize);
+    //** msa reads the text as it reads the file of an `importURL`, then renders it as after that import
+    m.u.file.importFile(aln_reduced);
+    m.render();
     //console.log(scheme_type,scaleSize);
 
     /*$(".smenu-dropdown-menu").find("li:contains('Reset')").each(function(){

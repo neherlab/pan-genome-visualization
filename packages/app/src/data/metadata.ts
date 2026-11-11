@@ -20,8 +20,8 @@ export interface MetaDisplay {
 }
 
 /**
- * The values of each colour column: the distinct strings of a `discrete` column, with `unknown` for a missing value,
- * and the pairs `[value, number]` of a `continuous` column.
+ * The values of each colour column: the distinct strings of a `discrete` column in legend order, with `unknown` last
+ * for a missing value, and the pairs `[value, number]` of a `continuous` column.
  */
 export type MetaDetails = Record<string, string[] | [string, number][]>;
 
@@ -48,7 +48,10 @@ function colorOptionOf(column: MetadataColumn): ColorOption | undefined {
   }
 }
 
-/** Return the values of each colour column, in the order of their first strain. */
+/**
+ * Return the values of each colour column. The legend and the colours of a `discrete` column follow its values in
+ * natural order (`2` before `10`), because `dataset.json` lists strains, not an order of the values.
+ */
 export function metaDetailsOf(dataset: Dataset): MetaDetails {
   const details: MetaDetails = {};
   for (const column of dataset.metadata) {
@@ -57,7 +60,10 @@ export function metaDetailsOf(dataset: Dataset): MetaDetails {
     }
     const values = distinct(dataset.strains.map((strain) => strain.values[column.key] ?? null));
     if (column.type === "discrete") {
-      details[column.key] = values.map((value) => value ?? UNKNOWN);
+      // `toSorted` needs Chrome 110, above the browser floor (Chrome 107); `sort` here orders the fresh copy of `filter`.
+      // oxlint-disable-next-line unicorn/no-array-sort
+      const known = values.filter((value) => value !== null).sort(NATURAL_ORDER.compare);
+      details[column.key] = values.includes(null) ? [...known, UNKNOWN] : known;
     } else {
       const pairs: [string, number][] = [];
       for (const value of values) {
@@ -80,6 +86,8 @@ export function tipAttributesOf(strain: Strain, dataset: Dataset): Record<string
   }
   return attributes;
 }
+
+const NATURAL_ORDER = new Intl.Collator("en", { numeric: true });
 
 function distinct<T>(values: readonly T[]): T[] {
   return [...new Set(values)];
