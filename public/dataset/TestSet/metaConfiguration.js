@@ -1,3 +1,0 @@
-var meta_details={"host": ["host_A", "host_B", "host_C"], "association_test1": ["0", "1"], "association_test2": [["1.1", 0.14], ["1.4", 0.49], ["1.5", 0.58], ["2.2", 1.14], ["2.3", 1.2]]},
-meta_display={"meta_display_order": ["host", "association_test1", "association_test2"], "color_options": {"host": {"menuItem": "host", "type": "discrete"}, "association_test1": {"menuItem": "association_test1", "type": "discrete"}, "association_test2": {"menuItem": "association_test2", "type": "mixed_continuous"}}};
-var association_columns=["association_test1", "association_test2"];

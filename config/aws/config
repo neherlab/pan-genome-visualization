@@ -1,9 +1,0 @@
-[default]
-region=us-east-1
-
-[profile default]
-s3 =
-  max_concurrent_requests = 200
-  max_queue_size = 5000
-  multipart_threshold = 4MB
-  multipart_chunksize = 4MB

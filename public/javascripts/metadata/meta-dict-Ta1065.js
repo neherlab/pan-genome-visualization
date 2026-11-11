@@ -1,1 +1,0 @@
-var meta_set = {"collection_date": ["unknown"], "country": ["unknown"], "host": ["unknown"]};var meta_display_set = {"meta_display_order": ["collection_date", "country", "host"], "color_options": {"collection_date": {"menuItem": "collection_date", "type": "continuous"}, "country": {"menuItem": "country", "type": "discrete"}, "host": {"menuItem": "host", "type": "discrete"}}};
