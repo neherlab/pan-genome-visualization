@@ -37,3 +37,88 @@ jobs:
 
       - name: Check
         run: just check
+
+  publish:
+    name: Publish
+    if: github.event_name == 'push' && (github.ref_name == 'release' || github.ref_name == 'master')
+    needs: check
+    runs-on: ubuntu-24.04
+    # One publish per branch at a time; a running publish always finishes.
+    concurrency:
+      group: publish-${{ github.ref_name }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VITE_DATA_URL: https://data.pangenome.org
+      VITE_PLAUSIBLE_DOMAIN: ${{ github.ref_name == 'release' && 'pangenome.org' || '' }}
+
+    steps:
+      # The group runs waiting jobs in no fixed order, and a newer waiting job replaces an older one, so a job whose
+      # commit is no longer the head of its branch ends here and never overwrites the pages of a newer build.
+      - name: Check that the commit is the head of the branch
+        id: head
+        run: |
+          head="$(git ls-remote "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git" "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
+          if [[ "${head}" == "${GITHUB_SHA}" ]]; then
+            echo "current=true" >>"${GITHUB_OUTPUT}"
+          else
+            echo "::notice::${GITHUB_REF_NAME} is at ${head}, not at ${GITHUB_SHA}: no publish"
+            echo "current=false" >>"${GITHUB_OUTPUT}"
+          fi
+
+      # Each branch has its own deploy role, bucket, and key prefix; a missing variable fails the job.
+      - name: Select the target of the branch
+        id: target
+        if: steps.head.outputs.current == 'true'
+        env:
+          AWS_ROLE_ARN_RELEASE: ${{ vars.AWS_ROLE_ARN_RELEASE }}
+          AWS_S3_BUCKET_RELEASE: ${{ vars.AWS_S3_BUCKET_RELEASE }}
+          AWS_S3_PREFIX_RELEASE: ${{ vars.AWS_S3_PREFIX_RELEASE }}
+          AWS_ROLE_ARN_MASTER: ${{ vars.AWS_ROLE_ARN_MASTER }}
+          AWS_S3_BUCKET_MASTER: ${{ vars.AWS_S3_BUCKET_MASTER }}
+          AWS_S3_PREFIX_MASTER: ${{ vars.AWS_S3_PREFIX_MASTER }}
+        run: |
+          branch="${GITHUB_REF_NAME^^}"
+          role="AWS_ROLE_ARN_${branch}" bucket="AWS_S3_BUCKET_${branch}" prefix="AWS_S3_PREFIX_${branch}"
+          for name in "${role}" "${bucket}" "${prefix}"; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::the repository variable ${name} is not set"
+              exit 1
+            fi
+          done
+          echo "role-arn=${!role}" >>"${GITHUB_OUTPUT}"
+          echo "AWS_S3_BUCKET=${!bucket}" >>"${GITHUB_ENV}"
+          echo "AWS_S3_PREFIX=${!prefix}" >>"${GITHUB_ENV}"
+
+      - name: Check out
+        if: steps.head.outputs.current == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools
+        if: steps.head.outputs.current == 'true'
+        uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        with:
+          version: 2026.10.17
+
+      - name: Install dependencies
+        if: steps.head.outputs.current == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        if: steps.head.outputs.current == 'true'
+        run: just build
+
+      - name: Get AWS credentials
+        if: steps.head.outputs.current == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ steps.target.outputs.role-arn }}
+          aws-region: eu-central-1
+
+      - name: Publish
+        if: steps.head.outputs.current == 'true'
+        run: just publish
