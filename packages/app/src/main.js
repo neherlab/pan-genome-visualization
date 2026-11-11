@@ -121,7 +121,7 @@ async function loadShownRelease(route) {
 }
 
 /**
- * Show a page. Its module exports `page`: `title`, `nav` (`active` item, `brand` text, `downloads` link), `html` (the
+ * Show a page. Its module exports `page`: `title`, `nav` (`active` item, `brand` text), `html` (the
  * part), and `mount(context)`, which runs after the part is shown: context `releases`, `release` (the entry of the
  * shown release), `index`, and `dataset` (the index entry), as far as the page needs them.
  */
@@ -209,7 +209,6 @@ function setupShell(page) {
   for (const item of navbar.querySelectorAll("[data-nav]")) {
     item.classList.toggle("active", item.dataset.nav === page.nav.active);
   }
-  navbar.querySelector('[data-nav="downloads"] a').setAttribute("href", page.nav.downloads);
   for (const year of document.querySelectorAll(".footer-year")) {
     year.textContent = `- ${new Date().getFullYear()}`;
   }
