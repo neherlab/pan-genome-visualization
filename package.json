@@ -1,59 +1,17 @@
 {
-  "name": "panX-visualization",
-  "version": "2.0.0",
-  "description": "pan-genome-visualization",
+  "name": "panx",
   "private": true,
-  "scripts": {
-    "clean": "rm -rf public/*.html public/*.html.gz public/*.br public/dist/*",
-    "build": "NODE_ENV=production npm run build:webpack && NODE_ENV=production npm run build:gulp && NODE_ENV=production npm run build:html",
-    "build:webpack": "NODE_ENV=production webpack --env production",
-    "build:gulp": "NODE_ENV=production gulp",
-    "build:html": "rm -rf public/*.html && node ./scripts/renderPageHtml.js && node ./scripts/renderPathogenHtml.js",
-    "start": "npm run serve -- public/",
-    "prepare-data": "python3 scripts/build_data_index.py",
-    "serve": "NODE_ENV=production node ./scripts/server.js"
-  },
-  "dependencies": {
-    "bootstrap": "3.3.7",
-    "bootstrap-multiselect": "0.9.13-1",
-    "bootstrap-toggle": "2.2.2",
-    "chroma-js": "1.2.2",
-    "compression": "1.6.2",
-    "cookie-parser": "1.3.5",
-    "crossfilter": "1.3.12",
-    "d3": "3.5.17",
-    "d3-tip": "0.7.1",
-    "datatable": "2.0.2",
-    "datatables.net": "1.10.13",
-    "datatables.net-colreorder": "1.3.3",
-    "datatables.net-dt": "1.10.13",
-    "dc": "2.1.3",
-    "debug": "2.2.0",
-    "import-loader": "1.0.1",
-    "jquery": "3.2.1",
-    "jquery.panzoom": "3.2.2",
-    "msa": "1.0.3",
-    "nouislider": "9.2.0",
-    "require-dir": "0.3.2",
-    "svg-pan-zoom": "3.5.0"
-  },
+  "description": "panX: interactive visualization of bacterial pan-genomes",
+  "license": "GPL-3.0-only",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
   "devDependencies": {
-    "allow-methods": "4.1.1",
-    "babel": "6.23.0",
-    "babel-preset-env": "1.7.0",
-    "dotenv": "4.0.0",
-    "express": "4.18.1",
-    "express-static-gzip": "2.1.7",
-    "gulp": "3.9.1",
-    "gulp-concat": "2.6.1",
-    "gulp-minify-css": "1.2.4",
-    "gulp-rename": "1.2.2",
-    "gulp-uglify": "3.0.2",
-    "jade": "1.11.0",
-    "morgan": "1.10.0",
-    "node-fetch": "2.6.7",
-    "webpack": "2.2.1",
-    "webpack-dev-middleware": "1.10.1",
-    "webpack-hot-middleware": "2.17.1"
-  }
+    "@types/bun": "1.4.4",
+    "oxfmt": "0.76.0",
+    "oxlint": "1.91.0",
+    "typescript": "7.0.2"
+  },
+  "packageManager": "bun@1.4.4"
 }

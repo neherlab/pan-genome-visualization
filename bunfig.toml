@@ -1,0 +1,6 @@
+telemetry = false
+
+[install]
+exact = true
+# Seven days, the release-age cooldown of .config/mise.toml.
+minimumReleaseAge = 604800
