@@ -68,6 +68,29 @@ typecheck: _node-modules
     done
     exit "${status}"
 
+# Build the app into packages/app/dist; needs VITE_DATA_URL, the URL of the data root
+build: _node-modules
+    cd packages/app && bun --bun vite build
+
+# Start the Vite dev server of the app on APP_PORT (8000), with the data of PANX_DATA: a folder through the local data host on DATA_PORT (8001), or a URL
+[script]
+dev: _node-modules
+    export VITE_DATA_URL="$(just _data-url)"
+    host=127.0.0.1
+    if [[ "${PANX_CONTAINER:-}" == 1 ]]; then host=0.0.0.0; fi
+    if [[ -d "${PANX_DATA}" ]]; then
+      bun packages/local-server/src/serve.ts --data-only &
+      trap 'kill $!' EXIT
+    fi
+    cd packages/app
+    bun --bun vite --host "${host}" --port "${APP_PORT:-8000}" --strictPort
+
+# Build the app with the data of PANX_DATA, then serve it on APP_PORT (8000) and a data root folder on DATA_PORT (8001): the local equivalent of the deployed site
+[script]
+serve: _node-modules
+    VITE_DATA_URL="$(just _data-url)" just build
+    bun packages/local-server/src/serve.ts
+
 # Write the JSON Schema files of docs/schemas from the zod schemas of packages/data-format
 schemas: _node-modules
     bun --bun packages/data-format/scripts/schemas.ts {{ schemas_dir }}
@@ -88,3 +111,9 @@ _shell-files:
 [private]
 _node-modules:
     [[ -d node_modules ]] || { printf 'node_modules is missing: run `bun install` first\n' >&2; exit 1; }
+
+# Print the data root URL of the app for PANX_DATA: the local data host for a folder, the URL itself for a URL
+[private]
+_data-url:
+    if [[ -z "${PANX_DATA:-}" ]]; then printf 'PANX_DATA is not set: give a data root folder or URL\n' >&2; exit 1; fi
+    if [[ "${PANX_DATA}" =~ ^https?:// ]]; then printf '%s\n' "${PANX_DATA%/}"; elif [[ -d "${PANX_DATA}" ]]; then printf 'http://127.0.0.1:%s\n' "${DATA_PORT:-8001}"; else printf 'PANX_DATA is neither an http(s) URL nor a folder: %s\n' "${PANX_DATA}" >&2; exit 1; fi

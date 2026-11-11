@@ -17,6 +17,8 @@
 #                      or a URL; passed to the container either way
 #   APP_PORT, DATA_PORT
 #                      Ports of the local app and data hosts, passed through
+#   VITE_*             Variables of the app build, such as VITE_DATA_URL, passed
+#                      through
 #   DEV_PUBLISH        Comma-separated container ports to publish on the same
 #                      host ports of 127.0.0.1, such as `8000,8001`; a server
 #                      in the container must listen on 0.0.0.0 to receive them
@@ -161,7 +163,7 @@ main() {
   done
   for name in $(compgen -e); do
     case "${name}" in
-    PANX_DATA | APP_PORT | DATA_PORT | AWS_* | MISE_GITHUB_TOKEN | CI | GITHUB_ACTIONS | NO_COLOR | FORCE_COLOR)
+    PANX_DATA | APP_PORT | DATA_PORT | VITE_* | AWS_* | MISE_GITHUB_TOKEN | CI | GITHUB_ACTIONS | NO_COLOR | FORCE_COLOR)
       env_flags+=(--env="${name}")
       ;;
     esac
