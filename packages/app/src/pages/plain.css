@@ -1,0 +1,5 @@
+/* The stylesheets of the tutorial, pipeline, pathogens, and not-found pages, in the order of their old templates. */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "../styles/autohiding-navbar2.css";
+@import "../styles/footer.css";
+@import "../styles/page-appearance.css";

@@ -1,0 +1,52 @@
+</div>
+<div class="container"><br><br>
+  <div class="row">
+    <nav id="myScrollspy" class="col-sm-2">
+      <ul class="nav nav-pills nav-stacked fixed-dropdown">
+        <li class="active"><a href="#overview"> Pipeline overview</a></li>
+        <li><a href="#benchmark">Benchmarking</a></li>
+      </ul>
+    </nav>
+    <div class="col-sm-6 panX-text"><br>
+      <div role="alert" class="alert alert-info">Pipeline overview</div>
+      <div id="overview">
+        <p><b>Input:</b> NCBI GenBank records or user's own genome sequences in GenBank format</p>
+        <p><b>Clustering:</b> DIAMOND + MCL + phylogeny-based post-processing</p>
+        <div class="item">
+          <figure><img src="/images/panX-pipeline.png" alt="..." style="width:100%;"><br><br>
+            <figcaption>
+              <p class="narrow">Fig.1 An overview of pan-genome analysis and visualization pipeline.</p>
+              <p class="narrow"><a href="https://github.com/neherlab/pan-genome-analysis">
+                  <u>PanX analysis pipeline</u></a> is based on DIAMOND, MCL and phylogeny-aware post-processing to determine clusters of orthologous genes from a collection of annotated genomes. PanX generates a strain/species tree based on core genome SNPs and a gene tree for each gene cluster.</p>
+              <p class="narrow"><a href="https://github.com/neherlab/pan-genome-visualization/">
+                  <u>PanX interactive visualization:</u></a></p>
+              <p class="narrow"><b>(1)</b> The dynamic pan-genome statistical charts allow rapid filtering and selection of gene subsets in the gene cluster table;</p>
+              <p class="narrow">clicking a gene cluster in the cluster table loads<b> (2)</b> corresponding alignment,<b> (3)</b> individual gene tree and<b> (4)</b> gene presence/absence and gain/loss pattern on strain/species tree;</p>
+              <p class="narrow"><b> (5)</b> Selecting sequences in alignment highlights associated strains on strain/species tree;</p>
+              <p class="narrow"><b> (6) (7)</b> Strain/species tree interacts with gene tree in various ways;</p>
+              <p class="narrow"><b> (8)</b> Zooming into a clade on strain/species tree screens strains in metadata table;</p>
+              <p class="narrow"><b> (9)</b> Searching in metadata table display strains associated with specific meta-information.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </div><br>
+      <div id="benchmark">
+        <div role="alert" class="alert alert-info alert-large">Benchmarking</div>
+        <div id="simulation-data">
+          <h4>Simulated datasets</h4>
+          <figure><img src="/images/ms-benchmark-simulations.png" style="width:698px;height:488px;">
+            <figcaption><a href="https://academic.oup.com/nar/article/46/1/e5/4564799#107886318">
+                <u>Check here for details:  comparison of clustering accuracy on simulated datasets - Figure 2.</u></a></figcaption>
+          </figure>
+        </div><br>
+        <div id="real-data">
+          <h4>Real datasets</h4>
+          <figure><img src="/images/ms-benchmark-realdata.png" style="width:90%">
+            <figcaption><a href="https://academic.oup.com/nar/article/46/1/e5/4564799#107886318">
+                <u>Check here for details: real pan-genomes - Figure 4.</u></a></figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

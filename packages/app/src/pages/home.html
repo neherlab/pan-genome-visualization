@@ -1,0 +1,90 @@
+</div>
+<div class="container home">
+  <div class="row"><br><br><br></div>
+  <div class="row panX-text">
+    <div id="logo" class="col-md-2">
+      <!--img.homepage_logo(src='images/pan-blue-noReads.svg')--><img src="/images/pan-blue-noReads.svg" style="width:230;height:209px;">
+      <!--.col-md-2-->
+    </div>
+    <!--p(style='font-size:22px') Pan-genomes from NCBI RefSeq data:-->
+    <div id="dc_data_count" class="col-md-3"><br>
+      <div role="alert" class="alert alert-info">Available pan-genomes</div>
+      <div id="species-selector"></div>
+      <div id="species-search" style="margin-top:3px"></div>
+    </div>
+    <div class="col-md-7">
+      <div style="padding-left:18px" class="row"><br>
+        <p>panX is a software package for comprehensive analysis, interactive visualization and dynamic exploration of bacterial pan-genomes. The analysis pipeline is based on DIAMOND, MCL and phylogeny-aware post-processing.</p>
+        <p>The visualization application encompasses various interconnected components (statistical charts, gene cluster table, alignment, comparative phylogenies, metadata). Gene clusters can be rapidly searched and filtered by summary statistics such as annotation and phylogenetic properties such as diversity.</p>
+        <p><strong>Metadata</strong> and gene presence/absence patterns can be mapped onto the species tree. Such mapping facilitates the identification of genes associated with phenotypes such as antibiotic resistance, virulence, or epidemiological parameters such as host age.</p>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:22px">Showcases of panX functionalities:</p>
+  <div class="row panX-text">
+    <div class="col-md-6">
+      <div class="thumbnail shadow_homepagex">
+        <div class="caption">
+          <h4>Epidemiology of 616 Streptococcus pneumoniae strains</h4>
+          <p><a href="https://www.nature.com/articles/sdata201558">Croucher et al. (2015)</a><span style="display:inline-block; width:5px;"></span><a href="#" role="button" data-toggle="modal" data-target="#Modal_Sp616" class="btn btn-info"> Demo</a><span style="display:inline-block; width:2px;"></span><a href="/S_pneumoniae616" role="button" class="btn btn-default">Explore</a></p>
+        </div><a href="/S_pneumoniae616"><img src="/images/Demo-Sp616.gif" alt="..."></a>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="thumbnail shadow_homepagex">
+        <div class="embed-responsive embed-responsive-16by9">
+          <iframe src="https://player.vimeo.com/video/375993607" allowfullscreen class="embed-responsive-item"></iframe>
+        </div>
+        <hr style="margin-bottom:3px">
+        <div class="caption">
+          <h4>Explore another example: diverse Prochlorococcus genomes
+            <!--(gene gain/loss pattern)-->
+          </h4>
+          <p><a href="https://www.nature.com/articles/sdata201434">Biller et al. (2014)</a><span style="display:inline-block; width:5px;"></span>
+            <!--a.btn.btn-info(href='#', role='button', data-toggle='modal', data-target='#Modal_Pm') Demo--><span style="display:inline-block; width:2px;"></span><a href="/P_marinus_meta" role="button" class="btn btn-default">Explore</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="Modal_Sp616" role="dialog" class="modal fade">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" data-dismiss="modal" class="close">×</button>
+          <h4 class="modal-title">Gene presence/absence, gain/loss pattern</h4>
+        </div>
+        <div class="modal-body"><img src="/images/Demo-Sp616.gif" style="width:100%;">
+          <!--img(data-gifffer='./images/Demo-Sp616.gif', style='width:100%;')-->
+        </div>
+        <div class="modal-footer">
+          <button type="button" data-dismiss="modal" class="btn btn-info">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="Modal_Pm" role="dialog" class="modal fade">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" data-dismiss="modal" class="close">×</button>
+          <h4 class="modal-title">Gene presence/absence, gain/loss pattern</h4>
+        </div>
+        <div class="modal-body"><img src="/images/Demo-Pm.gif" style="width:100%;"></div>
+        <div class="modal-footer">
+          <button type="button" data-dismiss="modal" class="btn btn-info">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="citation" class="row panX-text">
+    <p style="font-size:22px">If you use panX, please cite:</p>
+    <p>Wei Ding, Franz Baumdicker, Richard A Neher;<strong> panX: pan-genome analysis and exploration,</strong> Nucleic Acids Research, Volume 46, Issue 1, 9 January 2018, Pages e5,</p><strong><a href="https://doi.org/10.1093/nar/gkx977">https://doi.org/10.1093/nar/gkx977</a></strong>
+  </div><br>
+  <div id="downloads" class="row cs_shadow">
+    <div class="col-md-12">
+      <div role="alert" class="alert alert-info">Downloads</div>
+      <table id="download_table" cellspacing="0" width="100%" class="table table-striped table"></table>
+    </div>
+  </div>
+</div>

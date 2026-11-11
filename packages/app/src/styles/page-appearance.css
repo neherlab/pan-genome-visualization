@@ -1,4 +1,3 @@
-@import url("//fonts.googleapis.com/css?family=Lato:300,400,700");
 
 @media (min-width: 1160px) {
     div[class^="col"]{
@@ -35,9 +34,8 @@ img.homepage_logo{
 }
 
 body {
-  background-color: rgba(255, 140, 0, 0.015); !important
+  background-color: rgba(255, 140, 0, 0.015);
   /* rgba(255, 140, 10); */
-  font-family: "proxima-nova", Arial,sans-serif;
   font-size: 15px;
   line-height: 1.42857143;
 }/**/
@@ -281,11 +279,11 @@ table.dataTable thead>tr>td.sorting {
 
 /* dataTable childRow */
 td.ann-details-control, td.dup-details-control, td.geneName-details-control {
-    background: url('../images/childRow_details_open.png') no-repeat center center;
+    background: url('/images/childRow_details_open.png') no-repeat center center;
     cursor: pointer;
 }
 tr.shown td.ann-details-control, tr.shown td.dup-details-control, tr.shown td.geneName-details-control {
-    background: url('../images/childRow_details_close.png') no-repeat center center;
+    background: url('/images/childRow_details_close.png') no-repeat center center;
 }
 
 /* .x-axis-label {font-size: 1px;} */

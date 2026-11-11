@@ -1,0 +1,17 @@
+/* The stylesheets of the dataset page, in the order of its old template. */
+@import "../styles/pace-theme-center-atom.css";
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "../styles/bootstrap_customized.css";
+@import "../styles/bootstrap-toggle.min.css";
+@import "../styles/bootstrap-multiselect.css";
+@import "../styles/nouislider.min.css";
+@import "../styles/dc.css";
+@import "datatables.net-bs/css/dataTables.bootstrap.css";
+@import "../styles/dataTables-customized.css";
+@import "../styles/msa.css";
+@import "../styles/d3-tip.css";
+@import "../styles/autocomplete.css";
+@import "../styles/page-appearance.css";
+@import "../styles/autohiding-navbar2.css";
+@import "../styles/footer.css";
+@import "../styles/fontawesome-customized.css";

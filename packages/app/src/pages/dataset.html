@@ -1,0 +1,150 @@
+</div>
+<div class="container">
+  <div class="row"><br><br><br>
+    <div id="logo" class="col-md-2"><img src="/images/pan-blue-noReads.svg" style="width:230;height:209px;">
+      <div class="col-md-2"></div>
+    </div>
+    <div id="dc_data_count" class="col-md-2">
+      <div role="alert" class="alert alert-info">Species</div>
+      <div id="species-selector"></div>
+      <div id="species-search" style="margin-top:3px"></div>
+      <div style="margin-top:3px" class="dc_data_count"></div>
+    </div>
+    <div class="col-md-2">
+      <div role="alert" class="alert alert-info">Core vs. Accessory</div>
+      <div id="dc_coreAcc_piechart"></div>
+      <div id="col-coreThreshold" class="col-md-4"><span id="coreThreshold" data-toggle="tooltip" data-placement="bottom" title="coreThreshold ">cutoff:0.99</span></div>
+      <div class="col-md-6">
+        <div id="changeCoreThreshold"></div>
+      </div>
+    </div>
+    <div id="dc_straincount_chart" class="col-md-3">
+      <div role="alert" class="alert alert-info">Gene count rank distribution</div>
+    </div>
+    <div id="dc_geneLength_chart" class="col-md-3">
+      <div role="alert" class="alert alert-info">Gene length distribution</div>
+    </div>
+  </div>
+  <div class="row cs_shadow">
+    <div class="col-md-6">
+      <div role="alert" class="alert alert-info">Gene cluster table</div>
+      <table id="dc_data_table" cellspacing="0" width="100%" class="table table-striped table"></table>
+    </div>
+    <div class="col-md-6">
+      <div role="alert" class="alert alert-info">
+        <div id="sequence_viewer_title">Sequence alignment</div>
+      </div>
+      <div id="msa_legend" style="padding-top:3px"></div>
+      <div id="snippetDiv"></div>
+    </div>
+  </div>
+  <div id="all_trees" class="row cs_shadow">
+    <div class="col-md-6">
+      <div role="alert" class="alert alert-info">Strain tree (SNPs in all core genes)</div>
+      <div class="row">
+        <div id="dropdown_list" class="col-md-3 btn_tooltip"></div>
+        <div id="LeftTreeButtons" style="vertical-align: top" class="col-md-8">
+          <div class="col-md-2 triplet_layout_width triplet-button-group">
+            <button id="speciesTreeLayouts" type="button" class="triplet-button-control triplet-button-toggle speciesTree btn_tooltip">Layouts<span aria-hidden="true" class="fa fa-plus triplet-button-space"></span></button>
+            <ul id="options" class="list-inline">
+              <li class="option speciesTree">
+                <button id="speciesTreeRadial" type="button" class="triplet-button-single option1"><img src="/images/radial.png"></button>
+              </li>
+              <li class="option speciesTree">
+                <button id="speciesTreeVertical" type="button" class="triplet-button-single option2"><img src="/images/vertical.png"></button>
+              </li>
+              <li class="option speciesTree">
+                <button id="speciesTreeUnroot" type="button" class="triplet-button-single option3"><img src="/images/unrooted.png"></button>
+              </li>
+            </ul>
+          </div>
+          <input id="speciesTreeScale" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="Scale" data-off="Scale" data-size="mini" class="btn_tooltip">
+          <input id="speciesTreeLabels" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="Label" data-off="Label" data-size="mini" class="btn_tooltip">
+          <button id="speciesTree_height_plus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-resize-full"></span></button>
+          <button id="speciesTree_height_minus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-resize-small"></span></button>
+          <button id="speciesTree_nodePlus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-plus"></span></button>
+          <button id="speciesTree_nodeMinus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-minus"></span></button>
+          <button id="speciesTreeZoomReset" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-refresh"></span></button>
+          <input id="speciesTreePanzoom" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="&lt;i class='glyphicon glyphicon-move'&gt;&lt;/i&gt;" data-off="&lt;i class='glyphicon glyphicon-zoom-in'&gt;&lt;/i&gt;" data-size="mini" data-onstyle="primary" data-offstyle="info" class="btn_tooltip">
+          <input id="speciesTreeSynchr" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="Synchr" data-off="Synchr" data-size="mini" class="btn_tooltip">
+        </div>
+        <div id="download_coreTree" class="col-md-1 btn_tooltip"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">
+          <div id="colorblind_div" style="visibility: hidden;padding-left:4px">
+            <input id="colorblind_safe" type="checkbox" data-toggle="toggle" data-style="ios" data-on="&lt;i class='glyphicon glyphicon-eye-open'&gt;&lt;/i&gt;" data-off="&lt;i class='glyphicon glyphicon-eye-open'&gt;&lt;/i&gt;" data-size="mini" data-onstyle="success" data-offstyle="info" class="btn_tooltip">
+          </div>
+          <div id="metadata_legend">
+            <svg id="coreTree_legend"></svg>
+          </div>
+        </div>
+        <div class="col-md-10">
+          <div id="speciesTreeDiv">
+            <svg id="speciesTree"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div role="alert" class="alert alert-info">
+        <div id="genetree_title">Gene tree (individual gene)</div>
+      </div>
+      <div class="row">
+        <div id="genetree_buttons" class="col-md-7">
+          <div class="col-md-2 triplet_layout_width triplet-button-group">
+            <button id="geneTreeLayouts" type="button" class="triplet-button-control triplet-button-toggle geneTree btn_tooltip">Layouts<span aria-hidden="true" class="fa fa-plus triplet-button-space"></span></button>
+            <ul id="options" class="list-inline">
+              <li class="option geneTree">
+                <button id="geneTreeRadial" type="button" class="triplet-button-single triplet-button-single-toggle option1"><img src="/images/radial.png"></button>
+              </li>
+              <li class="option geneTree">
+                <button id="geneTreeVertical" type="button" class="triplet-button-single triplet-button-single-toggle option2"><img src="/images/vertical.png"></button>
+              </li>
+              <li class="option geneTree">
+                <button id="geneTreeUnroot" type="button" class="triplet-button-single triplet-button-single-toggle option3"><img src="/images/unrooted.png"></button>
+              </li>
+            </ul>
+          </div>
+          <input id="geneTreeScale" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="Scale" data-off="Scale" data-size="mini" class="btn_tooltip">
+          <input id="geneTreeLabels" type="checkbox" data-toggle="toggle" data-style="ios" data-on="Label" data-off="Label" data-size="mini" class="btn_tooltip">
+          <input id="geneTreeOrientation" type="checkbox" checked="" data-toggle="toggle" data-style="ios" data-on="Right-left" data-off="Left-right" data-size="mini" data-onstyle="primary" data-offstyle="info">
+          <button id="geneTree_height_plus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-resize-full"></span></button>
+          <button id="geneTree_height_minus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-resize-small"></span></button>
+          <button id="geneTree_nodePlus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-plus"></span></button>
+          <button id="geneTree_nodeMinus" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-minus"></span></button>
+          <button id="geneTreeZoomReset" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-refresh"></span></button>
+          <button id="geneTreeColorReset" class="btn btn-xs btn-primary btn_tooltip"><span class="glyphicon glyphicon-repeat"></span></button>
+        </div>
+        <!--#dropdown_list2.col-md-4-->
+        <div class="col-md-2">
+          <div id="searchAccession-group" class="input-group"><span id="searchAccession" class="input-group-addon primary sm-customized btn_tooltip"><span class="glyphicon glyphicon-search"></span></span>
+            <input type="text" placeholder="Accession" aria-describedby="sizing-addon1" class="form-control sm-customized tree_search">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div id="searchAnnotation-group" class="input-group"><span id="searchAnnotation" class="input-group-addon primary sm-customized btn_tooltip"><span class="glyphicon glyphicon-search"></span></span>
+            <input type="text" placeholder="Annotation" aria-describedby="sizing-addon1" class="form-control sm-customized tree_search">
+          </div>
+        </div>
+        <div id="download_geneTree" class="col-md-1 btn_tooltip"></div>
+      </div>
+      <div class="row">
+        <div class="col-md-10">
+          <div id="geneTreeDiv">
+            <svg id="geneTree"></svg>
+          </div>
+        </div>
+        <div class="col-md-2"><br><br><br>
+          <svg id="legend2"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row cs_shadow">
+    <div class="col-md-12">
+      <div role="alert" class="alert alert-info">Strain meta-info table</div>
+      <table id="dc_data_table_meta" cellspacing="0" width="100%" class="table table-striped table"></table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+/* The stylesheets of the home page, in the order of its old template. */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "datatables.net-bs/css/dataTables.bootstrap.css";
+@import "../styles/autohiding-navbar2.css";
+@import "../styles/footer.css";
+@import "../styles/autocomplete.css";
+@import "../styles/page-appearance.css";
