@@ -1,3 +1,4 @@
+import d3 from "d3";
 import {panXTree,metaLegend} from "./global";
 import chroma from 'chroma-js';
 import {colorblind_safe_set, discrete_color_set, continuous_color_set} from "./colors";

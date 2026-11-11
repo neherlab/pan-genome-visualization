@@ -1,5 +1,5 @@
 import d3 from "d3";
-import autocomplete from './third_party/autocomplete';
+import autocomplete from '../vendor/autocomplete.js';
 
 //** make species dropdown_menu
 export const create_species_dropdown = function (div, species_dt) {

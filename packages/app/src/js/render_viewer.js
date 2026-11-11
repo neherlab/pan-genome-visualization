@@ -1,11 +1,11 @@
+import d3 from "d3";
 import {render_chart_table} from "./chartsAndClusterTable";
 import {create_species_dropdown, autocomplete_species} from "./species-selector";
-import * as datapath from "./data_path";
 import speciesTree from "./speciesTree";
 import  {metaDataTable} from "./datatable-meta";
 import  {panXTree, metaLegend, panXClusterTable, panXMetaTable} from "./global";
 import {attachButtons, tipText, tipFontSize, attachPanzoom, connectTrees, applyChangeToTree, hideNonSelected, undoHideNonSelected} from "./tree-init";
-import {updateGeometry} from "../phyloTree/src/updateTree";
+import {updateGeometry} from "../vendor/phyloTree/updateTree";
 import {linkTableAlignmentTrees, linkMetaTableTree} from "./linkTableAlignmentTrees";
 import {create_dropdown, updateMetadata} from "./meta-color-legend";
 import {assign_metadata_color} from "./meta-color-assignment";

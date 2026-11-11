@@ -4,11 +4,9 @@ window.dc = dc;
 import noUiSlider from "nouislider";
 import crossfilter from "crossfilter";
 import {panXTree, panXDashboard} from "./global";
-import {pie, chart_width} from "./chart_style";
+import {pie} from "./chart_style";
 import * as dtab  from "./datatable-gc";
-import {geneEvent_path_A, geneEvent_path_B, aln_file_path} from "./data_path";
 import {loadNewGeneCluster} from "./linkTableAlignmentTrees";
-import * as datapath from "./data_path";
 import {tooltip_tableHeader} from "./tooltips";
 
 var init_core_threshold=0.99;

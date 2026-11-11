@@ -1,10 +1,10 @@
-import phyloTree from "../phyloTree/src/phyloTree";
-import drawTree from "../phyloTree/src/drawTree";
-import {zoomIntoClade, zoomIn} from "../phyloTree/src/zoom";
+import phyloTree from "../vendor/phyloTree/phyloTree";
+import drawTree from "../vendor/phyloTree/drawTree";
+import {zoomIntoClade, zoomIn} from "../vendor/phyloTree/zoom";
 import {changeLayout, changeDistance, updateGeometry,
         updateTipAttribute, updateTipStyle, updateTips,
-        updateBranchAttribute, updateBranchStyle, updateBranches} from "../phyloTree/src/updateTree";
-import {branchLabels, tipLabels} from "../phyloTree/src/labels";
+        updateBranchAttribute, updateBranchStyle, updateBranches} from "../vendor/phyloTree/updateTree";
+import {branchLabels, tipLabels} from "../vendor/phyloTree/labels";
 import d3 from "d3";
 import geneTreeCallbacks from "./geneTreeCallbacks";
 import {panXTree,panXDashboard} from "./global";

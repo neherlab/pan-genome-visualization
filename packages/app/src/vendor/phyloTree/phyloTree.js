@@ -1,3 +1,4 @@
+import d3 from "d3";
 import treeLayout from "./treeLayout";
 import treeCanvas from "./treeCanvas";
 import {preOrderIteration} from "./treeHelpers";

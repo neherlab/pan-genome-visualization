@@ -1,4 +1,5 @@
-import {preOrderIteration} from "../phyloTree/src/treeHelpers";
+import d3 from "d3";
+import {preOrderIteration} from "../vendor/phyloTree/treeHelpers";
 import {tooltip_node,tooltip_branch} from './tooltips';
 import {panXTree} from './global';
 

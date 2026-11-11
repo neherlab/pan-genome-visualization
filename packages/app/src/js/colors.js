@@ -1,3 +1,4 @@
+import d3 from "d3";
 //** 12-color palette(colorblind safe)
 //** from http://mkweb.bcgsc.ca/colorblind/img/colorblindness.palettes.simple.png
 export const colorblind_safe_set = ['#006E82','#8214A0','#005AC8','#00A0FA','#FA78FA','#14D2DC','#AA0A3C','#FA7850','#0AB45A','#F0F032','#A0FA82','#FAE6BE']

@@ -1,9 +1,8 @@
 import {create_dataTable} from "./datatable-gc";
-import {path_datatable_meta} from './data_path';
 import {panXMetaTable} from './global';
 import {button_tooltip,append_download_button} from './tooltips';
 
-export const DATA_ROOT_URL = process.env.DATA_ROOT_URL
+export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
 
 //#DataTable for meta-info
 export const metaDataTable = {

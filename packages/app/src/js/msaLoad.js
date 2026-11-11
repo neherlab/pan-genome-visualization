@@ -1,12 +1,9 @@
-import './third_party/msa-niaid';
-//import './third_party/msa-new.js';
-//import './third_party/msa.min.gz.js';
-//import './third_party/msa.js';
+import d3 from "d3";
+import '../vendor/msa-niaid.js';
 import {panXTree, msaViewerAsset} from './global'
 import {hideNonSelected} from './tree-init'
 import {button_tooltip,append_download_button} from './tooltips'
 
-//var msa = require("msa");
 
 const msaLoad = function (aln_path,scheme_type) {
     var rootDiv = document.getElementById('snippetDiv');

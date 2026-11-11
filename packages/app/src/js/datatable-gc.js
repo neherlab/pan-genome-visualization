@@ -1,19 +1,9 @@
+import d3 from "d3";
 import $ from 'jquery';
-window.$ = $;
-window.jQuery = $;
-import DataTable from 'datatables.net';
 import {button_tooltip, append_download_button} from './tooltips';
-import {table_columns, panXClusterTable} from './global';
-import './third_party/table_plugin/dataTables.bootstrap.min.js';
-require('datatables.net-colreorder');
-require("bootstrap");
-/*bootstrap-toggle for switch button*/
-require('bootstrap-toggle');
-/*import multiselect from "bootstrap-multiselect";*/
-var multiselect = require('bootstrap-multiselect');
-$.multiselect = multiselect;
+import {panXClusterTable} from './global';
 
-export const DATA_ROOT_URL = process.env.DATA_ROOT_URL
+export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
 
 if (typeof customized_standard_columns=='undefined'){
     //## dc_DataTables configuration <div style="display:inline-block" ></div>

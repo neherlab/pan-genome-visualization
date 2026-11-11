@@ -1,9 +1,9 @@
+import d3 from "d3";
 import msaLoad from './msaLoad';
 import geneTree from "./geneTree";
 import {panXTree,metaLegend,panXMetaTable} from "./global";
-import {aln_file_path} from "./data_path";
 import {attachButtons, hideNonSelected, undoHideNonSelected} from "./tree-init";
-import {removeLabels}  from "../phyloTree/src/labels";
+import {removeLabels}  from "../vendor/phyloTree/labels";
 
 /**
  * Module for initializing trigger actions in cluster datatable. It includes:

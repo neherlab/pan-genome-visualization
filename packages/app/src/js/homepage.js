@@ -2,10 +2,6 @@ import d3 from "d3";
 import {create_species_dropdown, autocomplete_species} from "./species-selector";
 
 import $ from 'jquery';
-window.$ = $;
-window.jQuery = $;
-import DataTable from 'datatables.net';
-import './third_party/table_plugin/dataTables.bootstrap.min.js';
 
 //** species_dt from species-list-info.js
 //** make species dropdown_menu
@@ -49,7 +45,7 @@ const create_downloads_table = (downloads_table_id) => {
             }
             else if (["species name", "panX link", "#strains", "source"].indexOf(column_display_order[i]) < 0) {
                 column_config['render']= function(data, type, row, meta){
-                                            var download_url= `${process.env.DATA_ROOT_URL}/${data}`;
+                                            var download_url= `${import.meta.env.VITE_DATA_URL}/${data}`;
                                             return '<a href="'+download_url+'" target="_blank"> <i class="glyphicon glyphicon-download-alt" style="vertical-align: middle;"></i> </a>';
                                         }
             }

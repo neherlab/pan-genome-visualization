@@ -1,8 +1,9 @@
-import {updateTips,updateBranches} from "../phyloTree/src/updateTree";
+import d3 from "d3";
+import {updateTips,updateBranches} from "../vendor/phyloTree/updateTree";
 import {panXTree,metaLegend,metaTitles} from "./global";
 import {colorPresenceAbsence,styleGainLoss} from "./tree-init";
 import {assign_metadata_color,metaColor_dicts,metaColor_dicts_keys,metaColor_reference_dicts} from './meta-color-assignment';
-import {preOrderIteration} from "../phyloTree/src/treeHelpers";
+import {preOrderIteration} from "../vendor/phyloTree/treeHelpers";
 
 //## legend configuration
 var legendRectSize = 15,

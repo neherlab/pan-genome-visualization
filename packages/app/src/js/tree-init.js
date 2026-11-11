@@ -1,19 +1,19 @@
+import d3 from "d3";
 import {panXTree,metaLegend,panXClusterTable,panXMetaTable} from "./global";
 import {tooltip_toggle} from "./tooltips";
-import {changeLayout, changeDistance, updateTips} from "../phyloTree/src/updateTree";
-import {zoomInY,  zoomIn, zoomIntoClade} from "../phyloTree/src/zoom";
-import {removeLabels, tipLabels}  from "../phyloTree/src/labels";
+import {changeLayout, changeDistance, updateTips} from "../vendor/phyloTree/updateTree";
+import {zoomInY,  zoomIn, zoomIntoClade} from "../vendor/phyloTree/zoom";
+import {removeLabels, tipLabels}  from "../vendor/phyloTree/labels";
 import svgPanZoom from "svg-pan-zoom";
 import {filterMetaDataTable} from "./datatable-meta";
 import {change_select_dropdown_value} from './linkTableAlignmentTrees';
 import {updateMetadata, removeLegend} from './meta-color-legend';
-import {updateTipAttribute,updateBranches} from "../phyloTree/src/updateTree";
-import {aln_file_path} from "./data_path";
+import {updateTipAttribute,updateBranches} from "../vendor/phyloTree/updateTree";
 import {unselect_clusterTable} from "./datatable-gc";
 
 const tipUnselected=panXTree.tipUnselected;
 
-export const DATA_ROOT_URL = process.env.DATA_ROOT_URL
+export const DATA_ROOT_URL = import.meta.env.VITE_DATA_URL
 
 export const hideNonSelected =function(tree){
     tree.tipElements

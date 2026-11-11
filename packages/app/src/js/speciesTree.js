@@ -1,11 +1,11 @@
-import phyloTree from "../phyloTree/src/phyloTree";
-import drawTree from "../phyloTree/src/drawTree";
-import {zoomIntoClade, zoomIn} from "../phyloTree/src/zoom";
-import {preOrderIteration} from "../phyloTree/src/treeHelpers";
+import phyloTree from "../vendor/phyloTree/phyloTree";
+import drawTree from "../vendor/phyloTree/drawTree";
+import {zoomIntoClade, zoomIn} from "../vendor/phyloTree/zoom";
+import {preOrderIteration} from "../vendor/phyloTree/treeHelpers";
 import {changeLayout, changeDistance, updateGeometry,
         updateTipAttribute, updateTipStyle, updateTips,
-        updateBranchAttribute, updateBranchStyle, updateBranches} from "../phyloTree/src/updateTree";
-import {branchLabels, tipLabels} from "../phyloTree/src/labels";
+        updateBranchAttribute, updateBranchStyle, updateBranches} from "../vendor/phyloTree/updateTree";
+import {branchLabels, tipLabels} from "../vendor/phyloTree/labels";
 import speciesTreeCallbacks from "./speciesTreeCallbacks";
 import d3 from "d3";
 import {panXDashboard,panXClusterTable,panXMetaTable} from "./global"
@@ -14,9 +14,6 @@ import {filterMetaDataTable} from "./datatable-meta";
 import {filterClusterDataTable} from "./datatable-gc";
 
 import $ from 'jquery';
-window.$ = $;
-window.jQuery = $;
-import DataTable from 'datatables.net';
 
 const speciesTree = function(tree_svg,treeJsonPath, handleResult){
     var treeplot = d3.select("#"+tree_svg);
