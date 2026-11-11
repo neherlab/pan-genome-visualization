@@ -1,11 +1,11 @@
 import d3 from "d3";
 import {create_species_dropdown, autocomplete_species} from "./species-selector";
+import {datasetFileUrl, datasetPagePath, datasets} from "./context";
 
 import $ from 'jquery';
 
-//** species_dt from species-list-info.js
 //** make species dropdown_menu
-create_species_dropdown('#species-selector', species_dt);
+create_species_dropdown('#species-selector');
 //** setup and render autocomplete for species
 autocomplete_species();
 
@@ -23,8 +23,19 @@ const create_dataTable = function (div, columns_set) {
 };
 
 const downloads_table_id='download_table';
-const path_downloads_table='../dataset/all_downloads_table.json'
 const column_display={"column_display_order": ["species name", "panX link", "#strains", "source", "core gene alignments", "all gene alignments", "strain/species tree", "metadata table"]};//, "gene cluster json"]};
+
+//** one row per dataset of index.json, with the URLs of its downloads in the shown release
+const downloads_table_rows = () => datasets.map((dataset) => ({
+    "species name": dataset.name,
+    "panX link": dataset.id,
+    "#strains": dataset.strains,
+    "source": dataset.source,
+    "core gene alignments": datasetFileUrl("core_gene_alignments.tar.gz", dataset.id),
+    "all gene alignments": datasetFileUrl("all_gene_alignments.tar.gz", dataset.id),
+    "strain/species tree": datasetFileUrl("strain_tree.nwk", dataset.id),
+    "metadata table": datasetFileUrl("metadata.tsv", dataset.id),
+}));
 
 const create_downloads_table = (downloads_table_id) => {
         var downloads_table;
@@ -39,21 +50,19 @@ const create_downloads_table = (downloads_table_id) => {
             var column_config={'targets': i,'data': column_display_order[i]};
             if (["panX link"].indexOf(column_display_order[i]) >= 0){
                 column_config['render']= function(data, type, row, meta){
-                                            var download_url= `/${data}`;
-                                            return '<a href="'+download_url+'" target="_blank"><i class="glyphicon glyphicon-new-window" style="vertical-align: middle;"></a>';
+                                            return '<a href="'+datasetPagePath(data)+'" target="_blank"><i class="glyphicon glyphicon-new-window" style="vertical-align: middle;"></a>';
                                         }
             }
             else if (["species name", "panX link", "#strains", "source"].indexOf(column_display_order[i]) < 0) {
                 column_config['render']= function(data, type, row, meta){
-                                            var download_url= `${import.meta.env.VITE_DATA_URL}/${data}`;
-                                            return '<a href="'+download_url+'" target="_blank"> <i class="glyphicon glyphicon-download-alt" style="vertical-align: middle;"></i> </a>';
+                                            return '<a href="'+data+'" target="_blank"> <i class="glyphicon glyphicon-download-alt" style="vertical-align: middle;"></i> </a>';
                                         }
             }
             columnDefs_list.push(column_config);
         }
 
         downloads_table= $('#'+downloads_table_id).DataTable({
-                'ajax': path_downloads_table,
+                'data': downloads_table_rows(),
                 'responsive': true,
                 'search':true,
                 'paging':true,
