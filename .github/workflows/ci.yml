@@ -2,96 +2,38 @@ name: CI
 
 on:
   push:
-    branches:
-      - 'master'
-      - 'release'
-
-  repository_dispatch:
-    types: build
-
+  pull_request:
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_type }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 defaults:
   run:
     shell: bash -euxo pipefail {0}
 
 jobs:
-  build_and_deploy:
-    name: 'Build and Deploy'
-    runs-on: ubuntu-22.04
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: check-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
 
     steps:
-      - name: Setup environment (release)
-        if: endsWith(github.ref, '/release')
-        run: |
-          echo "ENVIRONMENT=release" >> $GITHUB_ENV
-          echo "DATA_ROOT_URL=${{ secrets.RELEASE_DATA_ROOT_URL }}" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.RELEASE_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.RELEASE_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=${{ secrets.RELEASE_AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
-          echo "AWS_S3_BUCKET=${{ secrets.RELEASE_AWS_S3_BUCKET }}" >> $GITHUB_ENV
-          echo "AWS_CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.RELEASE_AWS_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-          echo "PLAUSIBLE_IO_DOMAIN=pangenome.org" >> $GITHUB_ENV
-
-      - name: Setup environment (master)
-        if: endsWith(github.ref, '/master')
-        run: |
-          echo "ENVIRONMENT=master" >> $GITHUB_ENV
-          echo "DATA_ROOT_URL=${{ secrets.MASTER_DATA_ROOT_URL }}" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.MASTER_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.MASTER_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-          echo "AWS_DEFAULT_REGION=${{ secrets.MASTER_AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
-          echo "AWS_S3_BUCKET=${{ secrets.MASTER_AWS_S3_BUCKET }}" >> $GITHUB_ENV
-          echo "AWS_CLOUDFRONT_DISTRIBUTION_ID=${{ secrets.MASTER_AWS_CLOUDFRONT_DISTRIBUTION_ID }}" >> $GITHUB_ENV
-          echo "PLAUSIBLE_IO_DOMAIN=master.pangenome.org" >> $GITHUB_ENV
-
-      - name: Checkout source code
-        uses: actions/checkout@v3
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          submodules: recursive
+          persist-credentials: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # mise installs the tools of .config/mise.toml at the URLs and checksums of .config/mise.lock.
+      - name: Install tools
+        uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
-          node-version: 10
+          version: 2026.10.17
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -qq --yes >/dev/null
-          sudo apt-get install -qq --yes brotli pigz rename >/dev/null
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-      - name: Install NPM dependencies
-        run: |
-          npm ci
-
-      - name: Install AWS CLI
-        run: |
-          curl -fsS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip -oqq awscliv2.zip
-          sudo ./aws/install --update
-
-          mkdir -p ~/.aws/
-          cp config/aws/config ~/.aws/
-
-      - name: Build
-        run: |
-          : ${DATA_ROOT_URL?"Environment variable is required"}
-          npm run build
-
-      - name: Check requirements
-        if: endsWith(github.ref, '/master') || endsWith(github.ref, '/release')
-        run: |
-          : ${AWS_ACCESS_KEY_ID?"Environment variable is required"}
-          : ${AWS_SECRET_ACCESS_KEY?"Environment variable is required"}
-          : ${AWS_DEFAULT_REGION?"Environment variable is required"}
-          : ${AWS_S3_BUCKET?"Environment variable is required"}
-          : ${AWS_CLOUDFRONT_DISTRIBUTION_ID?"Environment variable is required"}
-
-      - name: Precompress files
-        if: endsWith(github.ref, '/master') || endsWith(github.ref, '/release')
-        run: |
-          ./scripts/deploy_app.sh
+      - name: Check
+        run: just check
