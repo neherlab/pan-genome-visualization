@@ -199,10 +199,29 @@ export async function readBundle(
   return bundleFromMember(member, cluster, options.dataset);
 }
 
-/** Decompress one complete gzip stream with `DecompressionStream("gzip")`; reject on any fault of the stream. */
+/**
+ * Decompress one complete gzip stream with `DecompressionStream("gzip")`; reject on any fault of the stream with the
+ * error of the decompressor. The stream is read directly, because `Response` reports a stream fault as a network error.
+ */
 export async function gunzip(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8Array> {
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
+  const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip")).getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  // A stream reader yields its chunks one after another, and the browsers of the format have no async iteration of
+  // `ReadableStream`.
+  // oxlint-disable no-await-in-loop
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    chunks.push(chunk.value);
+    length += chunk.value.length;
+  }
+  // oxlint-enable no-await-in-loop
+  const member = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    member.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return member;
 }
 
 /**
