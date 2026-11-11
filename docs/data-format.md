@@ -375,7 +375,7 @@ Per cluster:
 
 - Every gene-tree tip `accession` and the accession of every FASTA record except `consensus` name a strain of the dataset
 - A reduced alignment holds, after an optional first `consensus` record, exactly the record identifiers of its full alignment, in any order
-- `loci[i]` equals the record identifiers (`<accession>|<locus_tag>`) of the full nucleotide alignment of `clusters[i]`
+- `loci[i]` equals the record identifiers (`<accession>|<locus_tag>`) of the full nucleotide alignment of `clusters[i]`, in record order
 
 Archives and objects:
 
