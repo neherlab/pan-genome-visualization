@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Usage: $0 <bindir>
+#
+# Install mise, at the version in the mise-version file next to this script and
+# for the architecture of the image, into a directory. The download is checked
+# against its sha256 in the checksums file next to this script.
+#
+set -euxo pipefail
+
+dest="${1:?bindir}"
+this_dir="$(dirname "${BASH_SOURCE[0]}")"
+version="$(cat "${this_dir}/mise-version")"
+archive="/tmp/mise.tar.gz"
+
+case "$(uname -m)" in
+x86_64) arch="x64" ;;
+aarch64) arch="arm64" ;;
+*)
+  printf 'Unsupported architecture: %s\n' "$(uname -m)" >&2
+  exit 1
+  ;;
+esac
+
+mkdir -p "${dest}"
+"${this_dir}/fetch" "https://github.com/jdx/mise/releases/download/v${version}/mise-v${version}-linux-${arch}-musl.tar.gz" "${archive}"
+tar -xzf "${archive}" --strip-components=2 -C "${dest}" "mise/bin/mise"
+rm "${archive}"
+"${dest}/mise" --version

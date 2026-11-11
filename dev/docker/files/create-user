@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# Usage: $0 <uid> <gid> <user> <group> <home>
+#
+# Create the user and group of the host in the image, with their ids, names, and
+# a home folder, so files written in the container belong to the host user and
+# tools that look up the user (git, ssh, bun) find a name and a home. An existing
+# user or group with the same id is renamed and reused.
+#
+set -euxo pipefail
+
+uid="${1:?uid}"
+gid="${2:?gid}"
+user="${3:?user}"
+group="${4:?group}"
+home="${5:?home}"
+
+if existing_group="$(getent group "${gid}")"; then
+  groupmod --new-name="${group}" "${existing_group%%:*}"
+else
+  groupadd --gid="${gid}" "${group}"
+fi
+
+if existing_user="$(getent passwd "${uid}")"; then
+  usermod \
+    --login="${user}" \
+    --home="${home}" \
+    --move-home \
+    --shell="/bin/bash" \
+    --gid="${gid}" \
+    "${existing_user%%:*}"
+  mkdir -p "${home}"
+else
+  useradd \
+    --uid="${uid}" \
+    --gid="${gid}" \
+    --home-dir="${home}" \
+    --create-home \
+    --shell="/bin/bash" \
+    "${user}"
+fi
+
+cp -a "/etc/skel/." "${home}/"
+touch "${home}/.hushlogin"
+chown -R "${uid}:${gid}" "${home}"

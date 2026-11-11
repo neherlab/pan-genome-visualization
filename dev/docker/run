@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+#
+# Usage: $0 [command [args...]]
+#
+# Run a command in the panX development container. With no command, start an
+# interactive shell. The image is built on first use and again whenever one of
+# its build inputs changes; the build prints nothing, and its whole log when it
+# fails.
+#
+# The checkout is mounted read-write at its host path, so paths in output and
+# git worktree links match the host. The git metadata is mounted read-only, so
+# nothing inside the container can plant a hook or a config entry that later
+# runs on the host. Every command runs as the host user without capabilities.
+#
+# Environment:
+#   PANX_DATA          Data root: a folder, mounted read-only at its host path,
+#                      or a URL; passed to the container either way
+#   APP_PORT, DATA_PORT
+#                      Ports of the local app and data hosts, passed through
+#   DEV_PUBLISH        Comma-separated container ports to publish on the same
+#                      host ports of 127.0.0.1, such as `8000,8001`; a server
+#                      in the container must listen on 0.0.0.0 to receive them
+#   AWS_*              AWS credentials and settings, passed through when set
+#   MISE_GITHUB_TOKEN  GitHub token for mise, passed through when set
+#   BUILDKIT_PROGRESS  Progress mode, such as `plain`, in which an image build
+#                      streams its log to stderr instead of printing nothing
+#
+# Examples:
+#   $0 just check
+#   PANX_DATA=/data/panx DEV_PUBLISH=8000,8001 $0 just dev
+#
+set -euo pipefail
+
+THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+ROOT_DIR="$(cd "${THIS_DIR}/../.." && pwd -P)"
+
+IMAGE_NAME="neherlab/panx-dev"
+DOCKERFILE="dev/docker/dev.dockerfile"
+# Paths relative to ROOT_DIR whose content defines the image.
+BUILD_INPUTS=(
+  "${DOCKERFILE}"
+  "${DOCKERFILE}.dockerignore"
+  ".config/mise.lock"
+  ".config/mise.toml"
+  "dev/docker/files"
+)
+
+# Print a short hash of the build inputs, their relative paths included, and of
+# the extra strings given as arguments.
+build_hash() {
+  pushd "${ROOT_DIR}" >/dev/null
+  {
+    find "${BUILD_INPUTS[@]}" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+    printf '%s\n' "$@"
+  } | sha256sum | cut -c1-16
+  popd >/dev/null
+}
+
+# Build the image with the given build-arg flags, unless it exists already.
+ensure_image() {
+  local image="${1}"
+  shift
+  if docker image inspect "${image}" >/dev/null 2>&1; then
+    return 0
+  fi
+  local build_flags=(
+    --file="${ROOT_DIR}/${DOCKERFILE}"
+    --tag="${image}"
+    --load
+    "$@"
+    "${ROOT_DIR}"
+  )
+  if [[ -n "${BUILDKIT_PROGRESS:-}" ]]; then
+    docker buildx build "${build_flags[@]}" >&2
+    return
+  fi
+  local build_log
+  if ! build_log="$(docker buildx build --progress=plain "${build_flags[@]}" 2>&1 </dev/null)"; then
+    printf 'Building image %s from %s failed:\n%s\n' "${image}" "${DOCKERFILE}" "${build_log}" >&2
+    return 1
+  fi
+}
+
+# Print one --publish flag per port of DEV_PUBLISH, bound to 127.0.0.1.
+publish_flags() {
+  local ports port
+  IFS=',' read -r -a ports <<<"${DEV_PUBLISH:-}"
+  for port in "${ports[@]}"; do
+    port="${port//[[:space:]]/}"
+    [[ -z "${port}" ]] && continue
+    if ! [[ "${port}" =~ ^[0-9]+$ ]] || ((port < 1 || port > 65535)); then
+      printf 'DEV_PUBLISH must list ports from 1 to 65535, separated by commas, got: %s\n' "${DEV_PUBLISH}" >&2
+      return 1
+    fi
+    printf '%s\n' "--publish=127.0.0.1:${port}:${port}"
+  done
+}
+
+main() {
+  show_help() {
+    sed -n '2,${/^#/!q; s/^# \?//p}' "${BASH_SOURCE[0]}" | sed "s|\$0|${0##*/}|g"
+  }
+
+  [[ "${1:-}" =~ ^(-h|--help)$ ]] && {
+    show_help
+    exit 0
+  }
+
+  local user_id group_id user_name group_name
+  user_id="$(id -u)"
+  group_id="$(id -g)"
+  user_name="$(id -un)"
+  group_name="$(id -gn)"
+
+  declare -A build_args=(
+    ["USER_ID"]="${user_id}"
+    ["GROUP_ID"]="${group_id}"
+    ["USER_NAME"]="${user_name}"
+    ["GROUP_NAME"]="${group_name}"
+    ["USER_HOME"]="/home/${user_name}"
+  )
+  local build_arg_flags=() key
+  for key in "${!build_args[@]}"; do
+    build_arg_flags+=(--build-arg="${key}=${build_args[${key}]}")
+  done
+
+  local image_tag image
+  image_tag="$(build_hash "$(uname -m)" "${build_arg_flags[@]}")"
+  image="${IMAGE_NAME}:${image_tag}"
+  ensure_image "${image}" "${build_arg_flags[@]}"
+
+  local mount_flags=(--volume="${ROOT_DIR}:${ROOT_DIR}")
+  # A linked worktree keeps its git directory under the main checkout, outside
+  # the mounted root; mount the common directory read-only so git works inside.
+  local git_common_dir
+  if git_common_dir="$(git -C "${ROOT_DIR}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
+    mount_flags+=(--volume="${git_common_dir}:${git_common_dir}:ro")
+  fi
+  if [[ -n "${PANX_DATA:-}" && -d "${PANX_DATA}" ]]; then
+    local data_dir
+    data_dir="$(cd "${PANX_DATA}" && pwd -P)"
+    mount_flags+=(--volume="${data_dir}:${data_dir}:ro")
+  fi
+
+  declare -A env_vars=(
+    ["BUN_INSTALL_CACHE_DIR"]="${ROOT_DIR}/.cache/bun"
+    ["DO_NOT_TRACK"]="1"
+    ["LANG"]="C.UTF-8"
+    ["MISE_DISABLE_UPDATE_WARNING"]="1"
+    ["MISE_TRUSTED_CONFIG_PATHS"]="${ROOT_DIR}"
+    ["PANX_CONTAINER"]="1"
+    ["TERM"]="${TERM:-xterm-256color}"
+    # The init process sends signals to the whole process group, as a terminal
+    # does: just ignores SIGINT and expects its children to receive it.
+    ["TINI_KILL_PROCESS_GROUP"]="1"
+    ["TZ"]="Etc/UTC"
+  )
+  local env_flags=() name
+  for key in "${!env_vars[@]}"; do
+    env_flags+=(--env="${key}=${env_vars[${key}]}")
+  done
+  for name in $(compgen -e); do
+    case "${name}" in
+    PANX_DATA | APP_PORT | DATA_PORT | AWS_* | MISE_GITHUB_TOKEN | CI | GITHUB_ACTIONS | NO_COLOR | FORCE_COLOR)
+      env_flags+=(--env="${name}")
+      ;;
+    esac
+  done
+
+  local publish
+  publish="$(publish_flags)"
+  local port_flags=()
+  if [[ -n "${publish}" ]]; then
+    mapfile -t port_flags <<<"${publish}"
+  fi
+
+  local tty_flags=()
+  if [[ -t 0 ]]; then
+    tty_flags=(--interactive --tty)
+  fi
+
+  # The working directory follows the caller when it is inside the checkout.
+  local cwd workdir="${ROOT_DIR}"
+  cwd="$(pwd -P)"
+  if [[ "${cwd}/" == "${ROOT_DIR}/"* ]]; then
+    workdir="${cwd}"
+  fi
+
+  mkdir -p "${ROOT_DIR}/.cache/bun"
+
+  exec docker run \
+    --rm \
+    --init \
+    "${tty_flags[@]+"${tty_flags[@]}"}" \
+    --name="panx-dev-$(date +%Y%m%d-%H%M%S)-$$" \
+    --cap-drop=ALL \
+    --security-opt=no-new-privileges \
+    --user="${user_id}:${group_id}" \
+    --workdir="${workdir}" \
+    "${mount_flags[@]}" \
+    "${env_flags[@]}" \
+    "${port_flags[@]+"${port_flags[@]}"}" \
+    "${image}" \
+    "${@:-bash}"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

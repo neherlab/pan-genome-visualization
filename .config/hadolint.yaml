@@ -1,0 +1,12 @@
+# The Dockerfile sets `SHELL ["bash", "-euxo", "pipefail", "-c"]`, so every RUN
+# is bash with pipefail; hadolint resolves a shell only from an absolute path and
+# reads the steps as POSIX sh (SC2239), and hadolint 2.15 forgets the bash SHELL
+# after ARG and ENV, so it reports bash syntax as POSIX sh (SC3040,
+# https://github.com/hadolint/hadolint/issues/1241).
+# APT packages follow the repositories of the pinned base image: exact package
+# versions disappear when those repositories update, so the Dockerfile cannot
+# keep them (DL3008).
+ignored:
+  - DL3008
+  - SC2239
+  - SC3040
