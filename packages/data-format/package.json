@@ -1,0 +1,14 @@
+{
+  "name": "@panx/data-format",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Schemas, paths, headers, and archive readers of the panX data format",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}
