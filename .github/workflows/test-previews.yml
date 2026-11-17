@@ -1,0 +1,79 @@
+# Test previews of the app on the new AWS setup: each push deploys the commit, then the branch, such as
+# https://branch-feat-new-aws-account.new-previews.pangenome.org; a pull request would deploy pr-<number>.
+name: "Test previews"
+
+on:
+  push:
+    branches:
+      - "feat/new-aws-account"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: "test-previews-${{ github.ref }}"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: "bash -euo pipefail {0}"
+
+jobs:
+  previews:
+    name: "Build and deploy the previews"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 30
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: "Name the preview sites"
+        id: "sites"
+        env:
+          EVENT: "${{ github.event_name }}"
+          NUMBER: "${{ github.event.pull_request.number }}"
+          BRANCH: "${{ github.head_ref || github.ref_name }}"
+          SHA: "${{ github.event.pull_request.head.sha || github.sha }}"
+        run: |
+          if [[ "${EVENT}" == "pull_request" ]]; then
+            sites="pr-${NUMBER}"
+          else
+            slug="$(tr '[:upper:]' '[:lower:]' <<<"${BRANCH}" | sed -E 's/[^a-z0-9]+/-/g; s/^-+//' | cut -c1-56 | sed -E 's/-+$//')"
+            sites="commit-${SHA::7} branch-${slug}"
+          fi
+          echo "sites=${sites}" >>"${GITHUB_OUTPUT}"
+
+      - name: "Check out"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Install tools"
+        uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        with:
+          version: "2026.10.17"
+
+      - name: "Install dependencies"
+        run: "bun install --frozen-lockfile"
+
+      - name: "Build"
+        env:
+          VITE_DATA_URL: "https://new-data.pangenome.org"
+        run: "just build"
+
+      - name: "Get AWS credentials"
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: "${{ secrets.PANGENOME_PREVIEWS_AWS_ROLE_ARN }}"
+          aws-region: "${{ secrets.PANGENOME_PREVIEWS_AWS_REGION }}"
+          mask-aws-account-id: true
+
+      - name: "Publish the previews"
+        env:
+          SITES: "${{ steps.sites.outputs.sites }}"
+          AWS_S3_BUCKET: "${{ secrets.PANGENOME_PREVIEWS_AWS_S3_BUCKET }}"
+        run: |
+          for site in ${SITES}; do
+            AWS_S3_PREFIX="previews.pangenome.org/${site}/" just publish
+            echo "https://${site}.new-previews.pangenome.org" >>"${GITHUB_STEP_SUMMARY}"
+          done
