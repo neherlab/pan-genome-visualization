@@ -1,0 +1,67 @@
+# Test deploy of the app to the new AWS setup, served at https://new.pangenome.org with the data of https://new-data.pangenome.org.
+# Runs only on this branch; ci.yml still publishes release and master.
+name: "Test deploy"
+
+on:
+  push:
+    branches:
+      - "feat/new-aws-account"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: "test-deploy"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: "bash -euo pipefail {0}"
+
+jobs:
+  deploy:
+    name: "Build and deploy the test app"
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 30
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      # A rerun of an older run ends here, so it never overwrites the pages of a newer build.
+      - name: "Check that the commit is the head of the branch"
+        run: |
+          head="$(git ls-remote "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git" "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
+          if [[ "${head}" != "${GITHUB_SHA}" ]]; then
+            echo "::error::${GITHUB_REF_NAME} is at ${head}, not at ${GITHUB_SHA}: no deploy"
+            exit 1
+          fi
+
+      - name: "Check out"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: "Install tools"
+        uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        with:
+          version: "2026.10.17"
+
+      - name: "Install dependencies"
+        run: "bun install --frozen-lockfile"
+
+      - name: "Build"
+        env:
+          VITE_DATA_URL: "https://new-data.pangenome.org"
+        run: "just build"
+
+      - name: "Get AWS credentials"
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: "${{ secrets.PANGENOME_SITE_AWS_ROLE_ARN }}"
+          aws-region: "${{ secrets.PANGENOME_SITE_AWS_REGION }}"
+
+      - name: "Publish"
+        env:
+          AWS_S3_BUCKET: "${{ secrets.PANGENOME_SITE_AWS_S3_BUCKET }}"
+          AWS_S3_PREFIX: "pangenome.org/"
+        run: "just publish"
