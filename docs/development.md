@@ -136,7 +136,7 @@ PANX_DATA=https://data.pangenome.org dev/docker/run just verify-data --deep
 
 ## App publish
 
-`just publish` (`packages/app/scripts/publish.ts`) uploads the build of `packages/app/dist/` to the app bucket `AWS_S3_BUCKET` under the key prefix `AWS_S3_PREFIX`: the static folder first, then the images and fonts, then the pages, each file with its `Cache-Control` and with `.br` and `.gz` copies. The CI job `publish` runs it for the branches `release` and `master`. `--dry-run` lists the writes and sends no request, so it needs no AWS credentials. [deployment.md](deployment.md) describes the objects, the CI job, and the repository settings.
+`just publish` (`packages/app/scripts/publish.ts`) uploads the build of `packages/app/dist/` to the app bucket `AWS_S3_BUCKET` under the key prefix `AWS_S3_PREFIX`: the static folder first, then the images and fonts, then the pages, each file once, uncompressed, with its `Cache-Control`. The CI job `publish` runs it for the branches `release` and `master`. `--dry-run` lists the writes and sends no request, so it needs no AWS credentials. [deployment.md](deployment.md) describes the objects, the CI job, and the repository settings.
 
 ```bash
 VITE_DATA_URL=https://data.pangenome.org dev/docker/run just build

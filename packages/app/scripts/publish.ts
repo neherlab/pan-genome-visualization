@@ -19,7 +19,7 @@ import { parseArgs } from "node:util";
 
 import { S3Client } from "@aws-sdk/client-s3";
 
-import { JOBS, buildFiles, missingCopies, siteObjects, uploadObjects, uploadSteps } from "./site-upload";
+import { JOBS, buildFiles, siteObjects, uploadObjects, uploadSteps } from "./site-upload";
 
 const USAGE = "usage: publish.ts [--dry-run] [--dist <folder>]";
 
@@ -33,17 +33,12 @@ if (prefix !== "" && (prefix.startsWith("/") || !prefix.endsWith("/"))) {
 
 const files = await buildFiles(dist).catch((error: unknown) => fail(String(error)));
 const objects = await siteObjects(dist, files, prefix);
-const missing = missingCopies(files, objects, prefix);
-if (missing.length > 0) {
-  fail(`files without their .br and .gz copies: ${missing.join(", ")}`);
-}
 const steps = uploadSteps(objects);
 
 if (values["dry-run"]) {
   for (const object of steps.flat()) {
-    const encoding = object.contentEncoding ?? "-";
     console.log(
-      `PUT s3://${bucket}/${object.key}\t${object.body.length}\t${object.contentType}\t${encoding}\t${object.cacheControl}`,
+      `PUT s3://${bucket}/${object.key}\t${object.body.length}\t${object.contentType}\t${object.cacheControl}`,
     );
   }
   console.error(`dry run: ${objects.length} writes for ${files.length} files of ${dist}; no request sent`);

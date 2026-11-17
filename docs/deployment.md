@@ -2,7 +2,7 @@
 
 panX runs on two hosts, both CloudFront distributions of the lab's site module in the AWS account `org-pangenome`:
 
-- **App host** `pangenome.org`: the static build of `packages/app`, in the app bucket under the key prefix `pangenome.org/`. The edge serves `index.html` for every path whose last segment has no `.`, and a `.br` or `.gz` copy of every file whose name does not end in an archive extension, by the `Accept-Encoding` of the request
+- **App host** `pangenome.org`: the static build of `packages/app`, in the app bucket under the key prefix `pangenome.org/`. The edge serves `index.html` for every path whose last segment has no `.`, and compresses the files itself with Brotli or gzip, by the `Accept-Encoding` of the request
 - **Data host** `data.pangenome.org`: the releases of the data format ([data-format.md](data-format.md)), in the data bucket. The data repository `neherlab/pan-genome-analysis` builds and publishes them; [Publication of a release](data-format.md#publication-of-a-release) gives its steps
 
 The app reads its data host from `VITE_DATA_URL` at build time and finds the releases and datasets in the index files, so new data needs no app rebuild.
@@ -17,7 +17,7 @@ The app reads its data host from `VITE_DATA_URL` at build time and finds the rel
 
 Each step starts after the step before it has finished, so a page never refers to a file that is not stored yet. The `Cache-Control` of each file comes from `appCacheControl` in `packages/local-server/src/app-site.ts`, which the local app host also sends. The content type of each file is the one that Bun gives its extension, as the local app host sends it.
 
-- **Compressed copies**: the edge requests a `.br` or `.gz` copy of every path that does not end in `.7z`, `.br`, `.bz2`, `.gz`, `.lz`, `.lz4`, `.lzma`, `.lzo`, `.sz`, `.xz`, `.zip`, or `.zst`, and it does not check that the copy exists. So every other file also gets a `.br` copy (Brotli quality 11) and a `.gz` copy (gzip level 9), with the content type of the file and `Content-Encoding: br` or `gzip`. The script stops before the first upload when a file lacks one of its copies
+- **No compressed copies**: each file is stored once, uncompressed. CloudFront compresses files of 1,000 to 10,000,000 bytes of the text, script, style, SVG, and font types on its own ([Serve compressed files](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ServingCompressedFiles.html)); the build has no larger file of these types
 - **Earlier builds stay**: the script deletes no object, so a page that a browser or the CDN still holds keeps loading its own static folder
 - **No cache clear**: the pages revalidate on every request, so a publish needs no invalidation, and the preview role, which may not create one, publishes the same way
 - **Refusals**: the script stops when `dist/` has no `index.html`, or when `AWS_S3_PREFIX` starts with `/` or does not end with `/`
@@ -30,7 +30,7 @@ Environment:
 | `AWS_S3_PREFIX` | the key prefix of the host, such as `pangenome.org/`; empty for the bucket root |
 | `AWS_REGION`    | `eu-central-1`; with the credentials of the AWS SDK's default chain             |
 
-`just publish --dry-run` prints each write to stdout (key, size, content type, content encoding, `Cache-Control`), in upload order, and sends no request, so it needs no credentials:
+`just publish --dry-run` prints each write to stdout (key, size, content type, `Cache-Control`), in upload order, and sends no request, so it needs no credentials:
 
 ```bash
 VITE_DATA_URL=https://data.pangenome.org dev/docker/run just build
