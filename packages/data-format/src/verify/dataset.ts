@@ -68,7 +68,7 @@ export async function verifyDataset(
     verifier.violation(
       `${base}/loci.json`,
       "loci-length",
-      `loci has ${loci.loci.length} lists, clusters.json has ${clusters.clusters.length} clusters`,
+      `loci has ${loci.loci.length} entries, clusters.json has ${clusters.clusters.length} clusters`,
     );
   }
 
@@ -344,7 +344,7 @@ function checkBundle(
     }
   }
 
-  const loci = facts.loci?.loci[index];
+  const loci = facts.loci?.loci[index]?.split(" ");
   const records = ids.get("_na_aln.fa") ?? [];
   if (loci !== undefined) {
     const position = Math.max(loci.length, records.length) === 0 ? -1 : firstDifference(loci, records);

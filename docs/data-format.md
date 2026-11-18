@@ -245,10 +245,13 @@ The ranges follow the order of the clusters: the first starts at byte 0, and eac
 ### `<release>/<dataset>/loci.json`
 
 ```json
-{ "format": 1, "loci": [["NC_000913|b0001", "NC_002695|ECs0001"]] }
+{ "format": 1, "loci": ["NC_000913|b0001 NC_002695|ECs0001"] }
 ```
 
-`loci[i]` lists the genes of `clusters[i]` as `<accession>|<locus_tag>`, the record identifiers of that cluster's full nucleotide alignment (the FASTA headers without the free text after them). `loci` has one list per cluster. The app loads the file only for the search of the cluster table, so the page load skips the locus tags, which make up most of the bytes of a cluster table.
+`loci[i]` holds the genes of `clusters[i]` as `<accession>|<locus_tag>`, the record identifiers of that cluster's full nucleotide alignment (the FASTA headers without the free text after them), in record order and joined by single spaces. `loci` has one string per cluster.
+
+- **Separate file**: the locus tags make up most of the bytes of a cluster table, so the page draws from `clusters.json` first and loads this file after it, for the search of the cluster table
+- **One string per cluster**: a dataset of 500 strains has about 2.4 million genes in 29,000 clusters. A list of separate strings costs the browser hundreds of milliseconds to parse, check, and join on every page, and one string per cluster costs tens of milliseconds and is the text that the search reads
 
 ## The pack `gene_clusters.tar.gz`
 
@@ -375,7 +378,7 @@ Per cluster:
 
 - Every gene-tree tip `accession` and the accession of every FASTA record except `consensus` name a strain of the dataset
 - A reduced alignment holds, after an optional first `consensus` record, exactly the record identifiers of its full alignment, in any order
-- `loci[i]` equals the record identifiers (`<accession>|<locus_tag>`) of the full nucleotide alignment of `clusters[i]`, in record order
+- `loci[i]`, split at its spaces, equals the record identifiers (`<accession>|<locus_tag>`) of the full nucleotide alignment of `clusters[i]`, in record order
 
 Archives and objects:
 

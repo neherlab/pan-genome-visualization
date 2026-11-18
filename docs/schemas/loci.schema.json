@@ -10,13 +10,10 @@
     "loci": {
       "type": "array",
       "items": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "pattern": "^[^\\s|]+\\|\\S+$"
-        }
+        "type": "string",
+        "pattern": "^[^\\s|]+\\|\\S+(?: [^\\s|]+\\|\\S+)*$"
       },
-      "description": "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>"
+      "description": "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>, joined by single spaces"
     }
   },
   "required": [

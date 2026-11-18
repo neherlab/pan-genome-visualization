@@ -19,7 +19,7 @@ export const RULES = {
   accessions: "every gene-tree tip and every FASTA record except consensus names a strain of the dataset",
   "reduced-alignment":
     "a reduced alignment holds an optional first consensus, then exactly the records of its full alignment",
-  loci: "loci[i] equals the record identifiers of the full nucleotide alignment of clusters[i], in record order",
+  loci: "loci[i], split at its spaces, equals the record identifiers of the full nucleotide alignment of clusters[i], in record order",
   pack: "the pack: contiguous ranges, one gzip member per cluster with the fixed header, ustar entries of the cluster, the end member last",
   "alignment-archives":
     "the alignment archives: one gzip stream with the fixed header, ustar, exactly the files of the rules, byte-equal to the pack",

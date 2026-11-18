@@ -118,7 +118,7 @@ The viewer libraries keep their major lines of the old site: d3 3, dc 2, crossfi
 | `patterns-length` | every _patterns.json has one character per non-root node of the strain tree |
 | `accessions` | every gene-tree tip and every FASTA record except consensus names a strain of the dataset |
 | `reduced-alignment` | a reduced alignment holds an optional first consensus, then exactly the records of its full alignment |
-| `loci` | loci[i] equals the record identifiers of the full nucleotide alignment of clusters[i], in record order |
+| `loci` | loci[i], split at its spaces, equals the record identifiers of the full nucleotide alignment of clusters[i], in record order |
 | `pack` | the pack: contiguous ranges, one gzip member per cluster with the fixed header, ustar entries of the cluster, the end member last |
 | `alignment-archives` | the alignment archives: one gzip stream with the fixed header, ustar, exactly the files of the rules, byte-equal to the pack |
 | `gzip` | every stored text object is one gzip member with the fixed header |

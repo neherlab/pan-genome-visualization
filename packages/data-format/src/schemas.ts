@@ -18,8 +18,11 @@ const ClusterId = z.string().regex(CLUSTER_ID_PATTERN);
 const Count = z.int().nonnegative();
 const PositiveCount = z.int().positive();
 const Sha256 = z.string().regex(/^[0-9a-f]{64}$/);
-/** `<accession>|<locus_tag>`, the identifier of a FASTA record. */
-const Locus = z.string().regex(/^[^\s|]+\|\S+$/);
+/**
+ * The genes of one cluster: the FASTA record identifiers `<accession>|<locus_tag>`, joined by single spaces. One string
+ * per cluster keeps the file cheap to parse: a dataset has millions of genes but only thousands of clusters.
+ */
+const ClusterLoci = z.string().regex(/^[^\s|]+\|\S+(?: [^\s|]+\|\S+)*$/);
 
 /** Add an issue for each value that occurs more than once. */
 function checkUnique(
@@ -376,7 +379,9 @@ export type Clusters = z.infer<typeof Clusters>;
 export const Loci = z
   .looseObject({
     format: FORMAT,
-    loci: z.array(z.array(Locus)).meta({ description: "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>" }),
+    loci: z.array(ClusterLoci).meta({
+      description: "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>, joined by single spaces",
+    }),
   })
   .meta({ title: "loci.json", description: "The genes of each cluster of a dataset" });
 export type Loci = z.infer<typeof Loci>;
