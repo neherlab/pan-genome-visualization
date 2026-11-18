@@ -1,4 +1,4 @@
-/** The panX data format 1: schemas, data paths, object headers, and the readers of the pack. */
+/** The panX data format: schemas, data paths, object headers, and the readers of the pack. */
 
 export * from "./headers";
 export * from "./pack";

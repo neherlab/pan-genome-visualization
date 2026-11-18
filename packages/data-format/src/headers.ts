@@ -1,6 +1,6 @@
 /**
- * Object headers of format 1 (docs/data-format.md, "S3 object metadata and bucket settings"): the one source of
- * the headers in this repository. Each `manifest.json` lists the headers of every object of its release.
+ * Object headers of the data format (docs/data-format.md, "Object headers and bucket settings"): the one
+ * source of the headers in this repository. Each `manifest.json` lists the headers of every object of its release.
  */
 
 import { type DataObject, type DatasetFile, parseDataPath } from "./paths";

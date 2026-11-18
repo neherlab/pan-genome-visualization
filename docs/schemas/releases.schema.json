@@ -2,11 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "format": {
-      "type": "number",
-      "const": 1,
-      "description": "Format of the data files"
-    },
     "default": {
       "type": "string",
       "pattern": "^\\d{8}T\\d{6}Z$",
@@ -23,19 +18,12 @@
             "pattern": "^\\d{8}T\\d{6}Z$",
             "description": "UTC creation time, ISO 8601 basic format"
           },
-          "format": {
-            "type": "integer",
-            "exclusiveMinimum": 0,
-            "maximum": 9007199254740991,
-            "description": "Format of every file of the release"
-          },
           "title": {
             "type": "string"
           }
         },
         "required": [
           "id",
-          "format",
           "title"
         ],
         "additionalProperties": {}
@@ -44,7 +32,6 @@
     }
   },
   "required": [
-    "format",
     "default",
     "releases"
   ],

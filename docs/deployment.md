@@ -3,7 +3,7 @@
 panX runs on two hosts, both CloudFront distributions of the lab's site module in the AWS account `org-pangenome`:
 
 - **App host** `pangenome.org`: the static build of `packages/app`, in the app bucket under the key prefix `pangenome.org/`. The edge serves `index.html` for every path whose last segment has no `.`, and a `.br` or `.gz` copy of every file whose name does not end in an archive extension, by the `Accept-Encoding` of the request
-- **Data host** `data.pangenome.org`: the releases of the data format ([data-format.md](data-format.md)), in the data bucket. The data repository `neherlab/pan-genome-analysis` builds and publishes them; [Releases and format versions](data-format.md#releases-and-format-versions) gives the steps of a data publication
+- **Data host** `data.pangenome.org`: the releases of the data format ([data-format.md](data-format.md)), in the data bucket. The data repository `neherlab/pan-genome-analysis` builds and publishes them; [Publication of a release](data-format.md#publication-of-a-release) gives its steps
 
 The app reads its data host from `VITE_DATA_URL` at build time and finds the releases and datasets in the index files, so new data needs no app rebuild.
 
@@ -69,7 +69,7 @@ A repository administrator makes these settings on GitHub; no workflow changes t
 The switch of `pangenome.org` to the new distribution goes in this order:
 
 1. The infrastructure maintainer applies the data bucket root, then the site root with the host `data.pangenome.org`, records its `distribution_domain_name` in `site.json`, applies the zone root, which then creates the record of `data.pangenome.org`, and applies the preview host settings of `tofu/click-neherlab/site`
-2. The data repository publishes the first release: the upload, the checks of [Releases and format versions](data-format.md#releases-and-format-versions), then the one write that creates `releases.json`. Then `just verify-data` passes with `PANX_DATA=https://data.pangenome.org`
+2. The data repository publishes the first release: the upload, the checks of [Publication of a release](data-format.md#publication-of-a-release), then the one write that creates `releases.json`. Then `just verify-data` passes with `PANX_DATA=https://data.pangenome.org`
 3. The job `publish` publishes the preview of `master`; the browser checks of [development.md](development.md#after-a-deployment) run there
 4. The job `publish` publishes `release` to `pangenome.org/`; it is checked at `https://next.pangenome.org`
 5. The infrastructure moves the host `pangenome.org` to the new distribution by its move plan

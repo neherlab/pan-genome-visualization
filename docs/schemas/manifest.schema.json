@@ -2,11 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "format": {
-      "type": "number",
-      "const": 1,
-      "description": "Format of the data files"
-    },
     "release": {
       "type": "string",
       "pattern": "^\\d{8}T\\d{6}Z$",
@@ -111,7 +106,6 @@
     }
   },
   "required": [
-    "format",
     "release",
     "build",
     "objects"

@@ -2,11 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "format": {
-      "type": "number",
-      "const": 1,
-      "description": "Format of the data files"
-    },
     "id": {
       "type": "string",
       "pattern": "^(?!(?:tutorial|pipeline|pathogens|index)$)[A-Za-z][A-Za-z0-9_]*$"
@@ -171,7 +166,6 @@
     }
   },
   "required": [
-    "format",
     "id",
     "strain_tree",
     "metadata",

@@ -14,9 +14,6 @@ import { HttpChecks, headerDifferences } from "./http";
 import { type Rule, Report, errorMessage, found, hex } from "./report";
 import { type DataSource, HttpSource } from "./source";
 
-/** The only format that this verifier reads. */
-export const VERIFIER_FORMAT = 1;
-
 export interface VerifyOptions {
   readonly source: DataSource;
   /** With a data host: also run every check on the downloaded objects. */
@@ -66,10 +63,6 @@ export class Verifier {
         : [this.#options.release];
     for (const id of ids) {
       const entry = releases?.releases.find((release) => release.id === id);
-      if (entry !== undefined && entry.format !== VERIFIER_FORMAT) {
-        this.report.skip();
-        continue;
-      }
       // The default release, or a release that is not listed yet and so may become the default.
       const isDefault = entry === undefined || id === releases?.default;
       // Each release is checked on its own, so the output follows the release order.
@@ -165,8 +158,8 @@ export class Verifier {
   }
 
   /**
-   * Return the parsed JSON file at a path when it decodes, has format 1, and passes its schema; report each fault and
-   * return `undefined` otherwise. `bytes` are the stored bytes, when the caller has loaded them.
+   * Return the parsed JSON file at a path when it decodes and passes its schema; report each fault and return
+   * `undefined` otherwise. `bytes` are the stored bytes, when the caller has loaded them.
    */
   async parseJson<T>(path: string, bytes: Uint8Array, schema: z.ZodType<T>): Promise<T | undefined> {
     const text = await this.decodeText(path, bytes, "schema");
@@ -178,11 +171,6 @@ export class Verifier {
       value = JSON.parse(text);
     } catch (error) {
       this.violation(path, "schema", `not JSON: ${errorMessage(error)}`);
-      return undefined;
-    }
-    const format = typeof value === "object" && value !== null && "format" in value ? value.format : undefined;
-    if (format !== VERIFIER_FORMAT) {
-      this.violation(path, "format", `format is ${found(format)}, the release has format ${VERIFIER_FORMAT}`);
       return undefined;
     }
     const result = schema.safeParse(value);
@@ -219,13 +207,6 @@ export class Verifier {
     await this.http?.checkHead(RELEASES_FILE, undefined);
     await Promise.all(
       releases.releases.map(async (entry) => {
-        if (entry.format !== VERIFIER_FORMAT) {
-          this.violation(
-            RELEASES_FILE,
-            "format",
-            `release ${entry.id} has format ${entry.format}; this verifier reads format ${VERIFIER_FORMAT}`,
-          );
-        }
         let exists: boolean;
         try {
           exists = await this.source.hasRelease(entry.id);

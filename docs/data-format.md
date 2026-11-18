@@ -1,6 +1,6 @@
-# panX data format 1
+# panX data format
 
-This document defines the data that the panX viewer reads: the layout of a data root, the files and their content, the HTTP behavior of the data host, the life of a release, and the encodings. It is the normative source of format 1. The data build in the repository `neherlab/pan-genome-analysis` writes data by these rules; the viewer, the verifier, the local server, and the JSON Schema files of this repository implement them.
+This document defines the data that the panX viewer reads: the layout of a data root, the files and their content, the HTTP behavior of the data host, the life of a release, and the encodings. It is the normative source of the format. The data build in the repository `neherlab/pan-genome-analysis` writes data by these rules; the viewer, the verifier, the local server, and the JSON Schema files of this repository implement them.
 
 Goals of the format:
 
@@ -16,7 +16,6 @@ Goals of the format:
 - **Release**: one immutable folder of all datasets on the data host, named by the UTC time of its creation
 - **Dataset**: one species, case study, or order of panX, with an id such as `Escherichia_coli`
 - **Cluster**: a gene cluster of a dataset: one row of the cluster table, with its alignments and trees
-- **Format**: the schema version of the data files, an integer. This document defines format 1
 - **Pack**: the file `gene_clusters.tar.gz` of a dataset, which holds the files of all its clusters
 - **Bundle**: the files of one cluster, read from the pack with one HTTP range request
 - **Member**: one gzip stream inside a file that holds several gzip streams one after another
@@ -64,27 +63,25 @@ In the last row, `<name>` is the file name without `.tar.gz`, such as `Escherich
 
 ## JSON files
 
-Every JSON file of the data root has `"format": 1`. The JSON files inside the pack keep the shape of the pipeline output, have no `format` field, and follow the format of their release.
+The sections below define the JSON files of the data root. The JSON files inside the pack keep the shape of the pipeline output.
 
 ### `releases.json`
 
 ```json
 {
-  "format": 1,
   "default": "20261112T080000Z",
-  "releases": [{ "id": "20261112T080000Z", "format": 1, "title": "panX data of 2022" }]
+  "releases": [{ "id": "20261112T080000Z", "title": "panX data of 2022" }]
 }
 ```
 
 - `default` names a listed release: the release that the app shows when the URL has no `?release=`
-- `releases` lists every live release, newest first. Each entry's `format` is the format of all files of that release
+- `releases` lists every live release, newest first
 - `title` is for people who read the file; the app does not show it. The release id is the creation time, so the file has no separate time field
 
 ### `<release>/index.json`
 
 ```json
 {
-  "format": 1,
   "release": "20261112T080000Z",
   "categories": [
     { "id": "case_study", "label": "Case studies" },
@@ -118,7 +115,6 @@ Every JSON file of the data root has `"format": 1`. The JSON files inside the pa
 
 ```json
 {
-  "format": 1,
   "release": "20261112T080000Z",
   "build": {
     "repository": "https://github.com/neherlab/pan-genome-analysis",
@@ -153,7 +149,6 @@ The strain tree, the strains, the metadata columns, the extra cluster columns, a
 
 ```json
 {
-  "format": 1,
   "id": "Escherichia_coli",
   "strain_tree": {
     "name": "NODE_0000000",
@@ -205,7 +200,6 @@ The cluster table without locus tags, in descending strain count, the order of t
 
 ```json
 {
-  "format": 1,
   "clusters": [
     {
       "id": "40b985f8b06b58ba_refined",
@@ -245,7 +239,7 @@ The ranges follow the order of the clusters: the first starts at byte 0, and eac
 ### `<release>/<dataset>/loci.json`
 
 ```json
-{ "format": 1, "loci": ["NC_000913|b0001 NC_002695|ECs0001"] }
+{ "loci": ["NC_000913|b0001 NC_002695|ECs0001"] }
 ```
 
 `loci[i]` holds the genes of `clusters[i]` as `<accession>|<locus_tag>`, the record identifiers of that cluster's full nucleotide alignment (the FASTA headers without the free text after them), in record order and joined by single spaces. `loci` has one string per cluster.
@@ -323,9 +317,9 @@ The app relies on this behavior of the data host. The table names the part of th
 - **Missing paths** answer 404: S3 answers 403 to Origin Access Control requests for missing keys, and the distribution turns 403 and 404 into a 404 with its HTML error page. The app checks the status before it parses
 - **No redirects** for data paths
 
-## Releases and format versions
+## Publication of a release
 
-Publication of a release, in this order:
+The steps, in this order:
 
 1. **Upload** every object of the new release folder, then its `manifest.json`
 2. **Check**: the verifier on the local data root that was uploaded (every check), then the verifier on the deployed URL with `--release <id>` (the HTTP checks). The folder is not listed yet, and `--release` checks it all the same
@@ -357,7 +351,6 @@ Files and releases:
 - Every JSON file passes its schema
 - `releases.json` names only existing release folders
 - `index.json` and `manifest.json` name the release of their folder
-- Every JSON file of the data root in a release has the `format` of its entry in `releases.json`
 - Every dataset of `index.json` has its folder with all 8 files, and every `category` is listed in `categories`
 - The default release has every dataset that the home page of the app links to
 

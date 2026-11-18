@@ -1,4 +1,4 @@
-/** Data paths of format 1 and their URLs under a data root (docs/data-format.md, "Layout of the data root"). */
+/** Data paths and their URLs under a data root (docs/data-format.md, "Layout of the data root"). */
 
 /** Release id: the UTC creation time in ISO 8601 basic format, such as `20261112T080000Z`. */
 export const RELEASE_ID_PATTERN = /^\d{8}T\d{6}Z$/;

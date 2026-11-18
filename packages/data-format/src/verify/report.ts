@@ -4,7 +4,6 @@
 export const RULES = {
   read: "every object of the layout exists and can be read",
   schema: "every JSON file is UTF-8 JSON and passes its schema",
-  format: "every JSON file and every releases.json entry has format 1, the format of this verifier",
   "releases-folders": "releases.json names only existing release folders",
   "release-id": "index.json and manifest.json name the release of their folder",
   "dataset-files": "every dataset of index.json has its folder with all 8 files",

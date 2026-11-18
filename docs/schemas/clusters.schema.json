@@ -2,11 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "format": {
-      "type": "number",
-      "const": 1,
-      "description": "Format of the data files"
-    },
     "clusters": {
       "type": "array",
       "items": {
@@ -178,7 +173,6 @@
     }
   },
   "required": [
-    "format",
     "clusters"
   ],
   "additionalProperties": {},

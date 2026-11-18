@@ -1,13 +1,12 @@
 /**
- * Zod schemas and types of the JSON files of format 1 (docs/data-format.md). Each schema also checks the rules that
- * hold inside its file; the rules across files belong to the verifier.
+ * Zod schemas and types of the JSON files of the data format (docs/data-format.md). Each schema also checks the rules
+ * that hold inside its file; the rules across files belong to the verifier.
  */
 
 import { z } from "zod";
 
 import { CLUSTER_ID_PATTERN, DATASET_ID_PATTERN, RELEASE_ID_PATTERN } from "./paths";
 
-const FORMAT = z.literal(1).meta({ description: "Format of the data files" });
 const ReleaseId = z
   .string()
   .regex(RELEASE_ID_PATTERN)
@@ -48,14 +47,12 @@ function without<T>(values: ReadonlySet<T>, exclude: ReadonlySet<T>): T[] {
 
 export const ReleaseEntry = z.looseObject({
   id: ReleaseId,
-  format: PositiveCount.meta({ description: "Format of every file of the release" }),
   title: z.string(),
 });
 export type ReleaseEntry = z.infer<typeof ReleaseEntry>;
 
 export const Releases = z
   .looseObject({
-    format: FORMAT,
     default: ReleaseId.meta({ description: "The release that the app shows without ?release=; a listed release" }),
     releases: z.array(ReleaseEntry).min(1).meta({ description: "Every live release, newest first" }),
   })
@@ -91,7 +88,6 @@ export type DatasetEntry = z.infer<typeof DatasetEntry>;
 
 export const ReleaseIndex = z
   .looseObject({
-    format: FORMAT,
     release: ReleaseId,
     categories: z.array(Category).meta({ description: "Dataset groups in display order" }),
     datasets: z.array(DatasetEntry).meta({ description: "Datasets in display order" }),
@@ -149,7 +145,6 @@ export type ManifestObject = z.infer<typeof ManifestObject>;
 
 export const Manifest = z
   .looseObject({
-    format: FORMAT,
     release: ReleaseId,
     build: Build,
     objects: z.array(ManifestObject).meta({ description: "Every object of the release folder except manifest.json" }),
@@ -230,7 +225,6 @@ export function preOrder<T extends { children?: readonly T[] | undefined }>(root
 
 export const Dataset = z
   .looseObject({
-    format: FORMAT,
     id: DatasetId,
     strain_tree: StrainTreeNode,
     metadata: z.array(MetadataColumn).meta({ description: "Metadata columns in display order" }),
@@ -347,7 +341,6 @@ export type ClusterKind = Cluster["kind"];
 
 export const Clusters = z
   .looseObject({
-    format: FORMAT,
     clusters: z.array(Cluster).meta({ description: "Clusters in descending strain count" }),
   })
   .superRefine((file, ctx) => {
@@ -377,7 +370,6 @@ export type Clusters = z.infer<typeof Clusters>;
 
 export const Loci = z
   .looseObject({
-    format: FORMAT,
     loci: z.array(ClusterLoci).meta({
       description: "loci[i]: the genes of clusters[i] as <accession>|<locus_tag>, joined by single spaces",
     }),
