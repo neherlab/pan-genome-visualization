@@ -1,7 +1,6 @@
 /**
- * Zod schemas and types of the JSON files of format 1 (docs/data-format.md). Every object passes unknown fields,
- * because a release may add fields within format 1. Each schema also checks the rules that hold inside its file;
- * the rules across files belong to the verifier.
+ * Zod schemas and types of the JSON files of format 1 (docs/data-format.md). Each schema also checks the rules that
+ * hold inside its file; the rules across files belong to the verifier.
  */
 
 import { z } from "zod";

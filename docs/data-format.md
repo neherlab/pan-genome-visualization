@@ -339,7 +339,6 @@ Rules:
 - **Write once**: every path in a release folder is written once. A changed file needs a new release; the publish command refuses to replace an object whose bytes differ from the manifest
 - **Several live releases**: a rollback writes `releases.json` with the earlier `default`
 - **Removal**: first take the release out of `releases.json`, then keep its folder for at least 30 days, so open pages and cached copies of `releases.json` keep working for that time. Later, a page or a link with `?release=` of a removed release shows the not-found page or a load error with a reload link
-- **Compatibility**: readers ignore unknown fields, so a release may add fields within format 1. Renaming, removing, or retyping a field, or a change of the archive structure, needs format 2 and a new release. An app that does not read the format of the shown release shows a hint to reload the page
 
 ## Encodings
 
