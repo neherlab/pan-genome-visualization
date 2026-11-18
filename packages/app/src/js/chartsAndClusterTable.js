@@ -274,7 +274,9 @@ export const render_chart_table = {
             count_id, chart1_id, chart2_id, chart3_id,
             coreThreshold_slider_id, coreThreshold_text_id,
             first_cluster, strain_tree_id,gene_tree_id,tool_side);
-        loadNewGeneCluster(first_cluster, species_tree, handleGeneTree, 'aa');
+        loadNewGeneCluster(first_cluster, species_tree, handleGeneTree, 'aa').finally(function(){
+            dtab.load_locus_tags(datatable, table_id, data);
+        });
         handleDataTable(datatable);
     }
 };

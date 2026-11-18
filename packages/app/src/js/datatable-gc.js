@@ -11,7 +11,7 @@ export const nameText = function(name){
 };
 
 //## dc_DataTables configuration <div style="display:inline-block" ></div>
-//** rows: the clusters of clusters.json with `rank` (row position + 1) and `locus` (the locus tags, see `loadLocusTags`)
+//** rows: the clusters of clusters.json with `rank` (row position + 1) and `locus` (the locus tags, see `load_locus_tags`)
 var table_columns= [
     {'defaultContent': '<button type="button" class="btn btn-info btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="amino acid alignment" >aa </button> <button type="button" class="btn btn-primary btn-xs" data-toggle="tooltip"  data-placement="bottom"  title="nucleotide alignment" >na </button> ',  'name':'Alignment','tooltip':'multiple sequence alignment'},
     {'defaultContent': '', 'className': 'geneName-details-control', 'orderable': false,  'name':''},//geneName expand
@@ -281,41 +281,46 @@ export const datatable_configuration = function(table_input, table_id, col_selec
     }
     button_tooltip('#'+table_id+'_filter', dt_button_tooltip_dict);
 
-    load_locus_tags_on_search(datatable, table_id, table_input);
-
     return datatable;
 };
 
 /**
- * Fill the hidden `locus` column on the first non-empty search of the table: load loci.json, set each row's locus tags
- * (`<accession>_<locus_tag>`, joined by spaces), and search again. A failed load shows its error, and the next search
- * tries again.
+ * Fill the hidden `locus` column: load loci.json, set each row's locus tags (`<accession>|<locus_tag>`, joined by
+ * spaces), and draw the table again. The viewer calls it once the first cluster is shown, so the download runs while
+ * the page is read. A search before the end shows that the locus tags are loading; a failed load shows its error, and
+ * the next search tries again.
  */
-const load_locus_tags_on_search = function(datatable, table_id, rows) {
-    var state = 'empty'; //** empty, loading, or loaded
+export const load_locus_tags = function(datatable, table_id, rows) {
+    var state = 'loading'; //** loading, loaded, or failed
     const status = $('<span class="locus-tags-status" style="margin-left:6px"></span>')
         .insertAfter('#'+table_id+'_filter label');
-    datatable.on('search.dt', function() {
-        if (state!=='empty' || datatable.search()==='') {
-            return;
-        }
+    const load = function() {
         state = 'loading';
-        status.text('loading locus tags');
         loadLoci(release.id, datasetId, clusters.length).then(function(file) {
             //** every row, also the rows that a chart filter has taken out of the table
             for (const row of rows) {
-                row.locus = file.loci[row.rank-1].map(function(locus){return locus.replaceAll('|', '_');}).join(' ');
+                row.locus = file.loci[row.rank-1];
             }
             state = 'loaded';
             status.text('');
             datatable.rows().invalidate('data').draw(false);
         }, function(error) {
             console.error(error);
-            state = 'empty';
+            state = 'failed';
             const reason = error instanceof DataError ? describeReason(error.reason) : String(error);
             status.text(`locus tags failed to load: ${reason}`);
         });
+    };
+    datatable.on('search.dt', function() {
+        if (state==='loaded' || datatable.search()==='') {
+            return;
+        }
+        status.text('loading locus tags');
+        if (state==='failed') {
+            load();
+        }
     });
+    load();
 };
 
 export const filterClusterDataTable = function(dataTableID, tree)
