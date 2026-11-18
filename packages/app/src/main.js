@@ -8,7 +8,7 @@
 
 import { DATASET_ID_PATTERN } from "@panx/data-format";
 
-import { checkReleaseFormat, DataError, findDataset, loadErrorAlert, loadIndex, loadReleases, pickRelease } from "./data";
+import { DataError, findDataset, loadErrorAlert, loadIndex, loadReleases, pickRelease } from "./data";
 import { keepReleaseInLinks, releaseParam } from "./links.js";
 
 /** Page modules by page name; each exports `page` (see `showPage`). */
@@ -106,7 +106,6 @@ async function loadShownRelease(route) {
   if (shown.kind === "unlisted") {
     return { notFound: "release" };
   }
-  checkReleaseFormat(shown.entry);
   if (!route.needsIndex) {
     return { context: { releases, release: shown.entry } };
   }

@@ -2,16 +2,12 @@
 
 import { z } from "zod";
 
-/** The data format that this app reads. */
-export const APP_FORMAT = 1;
-
 /** Why a data file failed to load. */
 export type DataErrorReason =
   | { readonly kind: "network"; readonly message: string }
   | { readonly kind: "status"; readonly status: number; readonly statusText: string }
   | { readonly kind: "json"; readonly message: string }
-  | { readonly kind: "schema"; readonly message: string }
-  | { readonly kind: "format"; readonly format: number };
+  | { readonly kind: "schema"; readonly message: string };
 
 /** A data file that failed to load, with its URL and the reason. */
 export class DataError extends Error {
@@ -36,16 +32,14 @@ export function describeReason(reason: DataErrorReason): string {
     case "json":
       return `the file is not valid JSON (${reason.message})`;
     case "schema":
-      return `the file does not follow data format ${APP_FORMAT}:\n${reason.message}`;
-    case "format":
-      return `the file has data format ${reason.format}, and this version of panX reads format ${APP_FORMAT}`;
+      return `the file does not follow the data format:\n${reason.message}`;
   }
 }
 
 /**
- * Return a loader of the JSON files of one schema: it fetches a URL, checks its status, its `format`, and its schema,
- * and returns the parsed value. Each URL loads once per page; a failed load is not kept, so a later call tries again.
- * The loader throws a `DataError`.
+ * Return a loader of the JSON files of one schema: it fetches a URL, checks its status and its schema, and returns
+ * the parsed value. Each URL loads once per page; a failed load is not kept, so a later call tries again. The loader
+ * throws a `DataError`.
  */
 export function jsonLoader<T>(schema: z.ZodType<T>): (url: string) => Promise<T> {
   const cache = new Map<string, Promise<T>>();
@@ -78,22 +72,11 @@ async function fetchJson<T>(url: string, schema: z.ZodType<T>): Promise<T> {
   } catch (error) {
     throw new DataError(url, { kind: "json", message: errorMessage(error) }, { cause: error });
   }
-  checkFormat(url, value);
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
     throw new DataError(url, { kind: "schema", message: z.prettifyError(parsed.error) }, { cause: parsed.error });
   }
   return parsed.data;
-}
-
-const FormatField = z.looseObject({ format: z.int() });
-
-/** Throw a format error when a file names a format other than the app's, before its schema rejects it. */
-export function checkFormat(url: string, value: unknown): void {
-  const file = FormatField.safeParse(value);
-  if (file.success && file.data.format !== APP_FORMAT) {
-    throw new DataError(url, { kind: "format", format: file.data.format });
-  }
 }
 
 function errorMessage(error: unknown): string {

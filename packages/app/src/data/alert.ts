@@ -4,7 +4,7 @@ import { DataError, describeReason } from "./load";
 
 /**
  * Return an alert for a failed load: the URL and the reason of a `DataError`, or the message of any other error,
- * and a link that reloads the page. A file of another data format gets the reload hint, because a newer app reads it.
+ * and a link that reloads the page.
  */
 export function loadErrorAlert(error: unknown): HTMLElement {
   const alert = document.createElement("div");
@@ -14,10 +14,7 @@ export function loadErrorAlert(error: unknown): HTMLElement {
   const heading = document.createElement("h4");
   const details = document.createElement("pre");
   details.style.whiteSpace = "pre-wrap";
-  if (error instanceof DataError && error.reason.kind === "format") {
-    heading.textContent = "This page needs a newer version of panX.";
-    details.textContent = `${error.url}: ${describeReason(error.reason)}.`;
-  } else if (error instanceof DataError) {
+  if (error instanceof DataError) {
     heading.textContent = "The data of this page could not be loaded.";
     details.textContent = `${error.url}: ${describeReason(error.reason)}`;
   } else {

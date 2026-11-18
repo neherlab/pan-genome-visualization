@@ -12,7 +12,7 @@ import {
   type ReleaseEntry,
 } from "@panx/data-format";
 
-import { APP_FORMAT, DataError, jsonLoader } from "./load";
+import { DataError, jsonLoader } from "./load";
 
 /** URL of the data root, without a trailing slash (`VITE_DATA_URL` of the build). */
 export const dataRoot: string = import.meta.env.VITE_DATA_URL;
@@ -84,13 +84,6 @@ export function pickRelease(releases: Releases, requested: string | null): Shown
     return { kind: "unlisted", id };
   }
   return { kind: "listed", entry, isDefault: id === releases.default };
-}
-
-/** Throw a format error when a release has a format other than the app's. */
-export function checkReleaseFormat(entry: ReleaseEntry): void {
-  if (entry.format !== APP_FORMAT) {
-    throw new DataError(dataFileUrl(dataPath({ kind: "releases" })), { kind: "format", format: entry.format });
-  }
 }
 
 /** Return the entry of a dataset in a release index, or `undefined` when the release lacks it. */
