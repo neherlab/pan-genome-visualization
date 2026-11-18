@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
       // dc 2 requires crossfilter2, a second copy of crossfilter 1 beside the app's.
       alias: { crossfilter2: "crossfilter" },
     },
-    plugins: [shellIncludes(), plausible(plausibleDomain)],
+    plugins: [shellIncludes(), dataPreconnect(dataUrl), plausible(plausibleDomain)],
     build: {
       target: browserTargets,
       outDir: "dist",
@@ -119,6 +119,22 @@ function shellIncludes(): Plugin {
             .trimEnd()
             .replace(/^(?=.)/gm, indent),
         ),
+    },
+  };
+}
+
+/** Open the connection to the data host while the page script loads, for the CORS requests of the data files. */
+function dataPreconnect(dataUrl: string): Plugin {
+  return {
+    name: "panx-data-preconnect",
+    transformIndexHtml() {
+      return [
+        {
+          tag: "link",
+          attrs: { rel: "preconnect", href: new URL(dataUrl).origin, crossorigin: true },
+          injectTo: "head-prepend",
+        },
+      ];
     },
   };
 }

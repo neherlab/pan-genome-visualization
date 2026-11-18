@@ -1,10 +1,10 @@
 // Page dispatch of the one page shell: index.html serves every page path, and
 // 404.html, the error page of the hosts, always shows the not-found part.
 //
-// Order: pick the page (and load the index files that it needs), import its
-// module, which resolves once the module's stylesheets have loaded, insert its
-// part, set the title and the navigation bar, then show the body. The body
-// stays hidden until then, so nothing paints without its styles.
+// Order: pick the page and import its module, which resolves once the module's
+// stylesheets have loaded, while the index files that the page needs load; then
+// insert its part, set the title and the navigation bar, and show the body. The
+// body stays hidden until then, so nothing paints without its styles.
 
 import { DATASET_ID_PATTERN } from "@panx/data-format";
 
@@ -58,6 +58,8 @@ async function main() {
     return;
   }
 
+  // `showPage` imports the module again and gets this load; its error surfaces there.
+  pageModules[route.name]().catch(() => {});
   let data;
   try {
     data = await loadShownRelease(route);
